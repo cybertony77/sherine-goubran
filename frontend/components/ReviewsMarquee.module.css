@@ -1,0 +1,251 @@
+.board {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.row {
+  width: 100%;
+  min-width: 0;
+}
+
+.rowDragging {
+  cursor: grabbing;
+}
+
+.rowDragging .body,
+.rowDragging .name {
+  user-select: none;
+}
+
+.viewport {
+  width: 100%;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 5%,
+    #000 95%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 5%,
+    #000 95%,
+    transparent 100%
+  );
+}
+
+.rowDragging .viewport,
+.viewport:active {
+  cursor: grabbing;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.group {
+  display: flex;
+  align-items: stretch;
+  gap: 22px;
+  padding-inline-end: 22px;
+}
+
+.card {
+  flex: 0 0 auto;
+  width: min(370px, 86vw);
+  min-height: 240px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
+  border-radius: 20px;
+  background: #151515;
+  border: 1px solid rgba(212, 170, 91, 0.18);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  box-sizing: border-box;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.avatar {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px;
+  background: linear-gradient(180deg, #e0c48a 0%, #c9a96a 58%, #b8954f 100%) !important;
+  color: #0f0f10 !important;
+  font-weight: 800;
+  font-size: 0.95rem !important;
+  flex-shrink: 0;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px rgba(15, 15, 16, 0.55),
+    0 0 0 4px rgba(201, 169, 106, 0.35);
+}
+
+.meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  margin: 0;
+  color: #f7f4ee;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.category {
+  margin: 4px 0 0;
+  color: rgba(233, 193, 113, 0.88);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ratingRow {
+  margin: 14px 0 12px;
+  pointer-events: none;
+}
+
+.body {
+  margin: 0;
+  flex: 1;
+  color: rgba(247, 244, 238, 0.84);
+  font-size: 0.98rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+}
+
+.readMore {
+  margin: 14px 0 0;
+  padding: 0;
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  color: #e9c171;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.readMore:hover {
+  color: #f7f4ee;
+}
+
+.readMore:focus-visible {
+  outline: 2px solid #c9a96a;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 8, 9, 0.78);
+}
+
+.lightboxCard {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(82vh, 720px);
+  overflow: auto;
+  padding: 32px 28px 28px;
+  border-radius: 22px;
+  background: #151515;
+  border: 1px solid rgba(212, 170, 91, 0.28);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.lightboxClose {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #e9c171;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightboxClose:hover,
+.lightboxClose:focus-visible {
+  color: #f7f4ee;
+}
+
+.lightboxClose:focus-visible {
+  outline: 2px solid #c9a96a;
+  outline-offset: 2px;
+}
+
+.lightboxBody {
+  margin: 0;
+  color: rgba(247, 244, 238, 0.88);
+  font-size: 1.02rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 1079px) {
+  .card {
+    width: min(340px, 46vw);
+  }
+}
+
+@media (max-width: 768px) {
+  .board {
+    gap: 20px;
+  }
+
+  .group {
+    gap: 16px;
+    padding-inline-end: 16px;
+  }
+
+  .card {
+    width: 86vw;
+    max-width: none;
+    min-height: 230px;
+    padding: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    will-change: auto;
+  }
+}

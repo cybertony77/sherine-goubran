@@ -1,0 +1,306 @@
+.carousel {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  background: transparent;
+  --review-nav: #c9a96a;
+  --review-nav-gap: clamp(24px, 4vw, 34px);
+  --review-nav-dot-gap: 8px;
+}
+
+.carousel :global(.mantine-Carousel-root),
+.carousel :global(.mantine-Carousel-viewport),
+.carousel :global(.mantine-Carousel-container),
+.carousel :global(.mantine-Carousel-slide) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.carousel :global(.mantine-Carousel-root) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.carousel :global(.mantine-Carousel-viewport) {
+  overflow: hidden;
+  flex: none;
+}
+
+.carousel :global(.mantine-Carousel-container) {
+  align-items: flex-start !important;
+}
+
+.carousel :global(.mantine-Carousel-slide) {
+  height: auto !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+
+.carousel :global(.mantine-Carousel-controls) {
+  display: none !important;
+}
+
+.carousel :global(.mantine-Carousel-indicators) {
+  position: relative !important;
+  inset: auto !important;
+  bottom: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  margin-top: var(--review-nav-gap) !important;
+  padding-top: 2px;
+  min-height: 28px;
+  justify-content: center;
+  align-items: center;
+  gap: var(--review-nav-dot-gap);
+  pointer-events: auto;
+  flex: none;
+}
+
+.carousel :global(.mantine-Carousel-indicators[data-orientation='horizontal']) {
+  flex-direction: row;
+}
+
+.carousel :global(.mantine-Carousel-indicator) {
+  width: 8px !important;
+  height: 4px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--review-nav) 40%, transparent) !important;
+  opacity: 1 !important;
+  transition: background-color 0.2s ease, width 0.2s ease;
+}
+
+.carousel :global(.mantine-Carousel-indicator[data-active]),
+.carousel :global(.mantine-Carousel-indicator[data-active='true']) {
+  width: 18px !important;
+  background: var(--review-nav) !important;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.045) 0%, transparent 36%),
+    linear-gradient(180deg, #18181b 0%, #121214 100%);
+  border: 1px solid rgba(201, 169, 106, 0.3);
+  box-shadow: none;
+  width: 100%;
+  height: auto;
+  box-sizing: border-box;
+  display: block;
+  transition: border-color 0.35s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(233, 193, 113, 0.85) 28%,
+    rgba(247, 244, 238, 0.55) 50%,
+    rgba(233, 193, 113, 0.85) 72%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  top: -48px;
+  right: -36px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 169, 106, 0.16) 0%, transparent 68%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.quote {
+  position: absolute;
+  top: 10px;
+  right: 18px;
+  z-index: 1;
+  color: rgba(201, 169, 106, 0.22);
+  font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Times New Roman', serif;
+  font-size: 4.4rem;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+  transition: color 0.35s ease, transform 0.35s ease;
+}
+
+.header {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 14px !important;
+}
+
+.cardSm {
+  padding: 18px 18px 16px !important;
+}
+
+.cardSm .body {
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+.cardMd {
+  padding: 22px 24px 20px !important;
+}
+
+.cardMd .body {
+  font-size: 1.04rem;
+  line-height: 1.72;
+}
+
+.cardLg {
+  padding: 26px 28px 24px !important;
+}
+
+.cardLg .body {
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.avatar {
+  background: linear-gradient(180deg, #e0c48a 0%, #c9a96a 58%, #b8954f 100%) !important;
+  color: #0f0f10 !important;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow:
+    0 0 0 2px rgba(15, 15, 16, 0.55),
+    0 0 0 4px rgba(201, 169, 106, 0.45);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  color: #f7f4ee;
+  font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Times New Roman', serif;
+  font-size: 1.18rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.category {
+  color: rgba(233, 193, 113, 0.88);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.body {
+  position: relative;
+  z-index: 1;
+  color: rgba(247, 244, 238, 0.82);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.ratingRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(201, 169, 106, 0.16);
+}
+
+.rating {
+  margin-top: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    border-color: rgba(201, 169, 106, 0.55);
+  }
+
+  .card:hover .quote {
+    color: rgba(201, 169, 106, 0.38);
+  }
+
+  .card:hover .name {
+    color: #ffffff;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel {
+    max-width: 100%;
+    --review-nav-gap: clamp(22px, 5.5vw, 30px);
+    --review-nav-dot-gap: 10px;
+  }
+
+  .carousel :global(.mantine-Carousel-indicators) {
+    min-height: 36px;
+    padding-top: 4px;
+    padding-bottom: 2px;
+  }
+
+  .carousel :global(.mantine-Carousel-indicator) {
+    width: 10px !important;
+    height: 5px !important;
+  }
+
+  .carousel :global(.mantine-Carousel-indicator[data-active]),
+  .carousel :global(.mantine-Carousel-indicator[data-active='true']) {
+    width: 22px !important;
+  }
+
+  .cardLg {
+    padding: 22px 18px 20px !important;
+  }
+
+  .cardMd {
+    padding: 18px 16px 16px !important;
+  }
+
+  .quote {
+    font-size: 3.6rem;
+    right: 12px;
+  }
+}
+
+@media (max-width: 479px) {
+  .carousel {
+    --review-nav-gap: 24px;
+    --review-nav-dot-gap: 12px;
+  }
+
+  .carousel :global(.mantine-Carousel-indicators) {
+    min-height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel :global(.mantine-Carousel-viewport),
+  .card,
+  .quote {
+    transition: none !important;
+  }
+
+  .card:hover .quote {
+    transform: none;
+  }
+}

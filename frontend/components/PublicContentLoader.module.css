@@ -1,0 +1,61 @@
+.wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(48px, 10vw, 96px) 16px;
+  box-sizing: border-box;
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 220px);
+  min-height: 140px;
+  padding: 36px 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(201, 169, 106, 0.28);
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.05) 0%, rgba(20, 20, 22, 0.55) 100%);
+  box-shadow: 0 18px 40px rgba(8, 8, 9, 0.35);
+  box-sizing: border-box;
+}
+
+.spinnerWrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(201, 169, 106, 0.18);
+  border-top-color: #c9a96a;
+  border-right-color: rgba(201, 169, 106, 0.55);
+  animation: publicSpin 0.9s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+}
+
+.spinnerInner {
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(233, 193, 113, 0.12);
+  border-bottom-color: rgba(233, 193, 113, 0.7);
+  animation: publicSpin 1.15s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite reverse;
+}
+
+@keyframes publicSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinnerInner {
+    animation-duration: 1.8s;
+  }
+}

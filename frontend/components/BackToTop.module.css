@@ -1,0 +1,103 @@
+.btn {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  z-index: 30;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #0f0f10;
+  background: var(--system-secondary, #c9a96a);
+  box-shadow:
+    0 10px 24px rgba(201, 169, 106, 0.34),
+    0 2px 0 rgba(255, 255, 255, 0.22) inset;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.96);
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease,
+    visibility 280ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  display: block;
+  transition: transform 300ms ease;
+}
+
+.btn:hover {
+  background: var(--system-secondary-hover, #b8954f);
+  transform: translateY(0) scale(1.08);
+  box-shadow:
+    0 14px 28px rgba(201, 169, 106, 0.42),
+    0 2px 0 rgba(255, 255, 255, 0.28) inset;
+}
+
+.btn:hover .icon {
+  transform: translateY(-4px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.94);
+}
+
+.btn:focus-visible {
+  outline: 2px solid #f7f4ee;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 4px rgba(201, 169, 106, 0.45),
+    0 10px 24px rgba(201, 169, 106, 0.34);
+}
+
+@media (max-width: 768px) {
+  .btn {
+    right: 16px;
+    bottom: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: opacity 150ms ease, visibility 150ms ease;
+    transform: none;
+  }
+
+  .visible,
+  .btn:hover,
+  .btn:active {
+    transform: none;
+  }
+
+  .icon,
+  .btn:hover .icon {
+    transition: none;
+    transform: none;
+  }
+}

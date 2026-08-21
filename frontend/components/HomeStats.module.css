@@ -1,0 +1,87 @@
+.highlights {
+  width: 100%;
+  padding: 42px 24px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(201, 169, 106, 0.12), transparent 58%),
+    #121214;
+  border-top: 1px solid rgba(201, 169, 106, 0.2);
+  border-bottom: 1px solid rgba(201, 169, 106, 0.12);
+}
+
+.highlightsGrid {
+  width: min(1100px, calc(100% - 8px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.statCard {
+  text-align: center;
+  padding: 18px 10px;
+  position: relative;
+}
+
+.statCard:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  right: 0;
+  width: 1px;
+  height: 64%;
+  background: linear-gradient(180deg, transparent, rgba(233, 193, 113, 0.45), transparent);
+}
+
+.statValue {
+  margin: 0;
+  color: #e9c171;
+  font-size: clamp(2rem, 4.2vw, 3.15rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 8px 24px rgba(233, 193, 113, 0.18);
+}
+
+.statLabel {
+  margin: 8px 0 0;
+  color: rgba(247, 244, 238, 0.78);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .highlights {
+    padding: 32px 16px;
+  }
+
+  .highlightsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 8px;
+  }
+
+  .statCard:nth-child(2n)::after {
+    display: none;
+  }
+
+  .statCard:not(:last-child)::after {
+    height: 70%;
+    top: 15%;
+  }
+}
+
+@media (max-width: 480px) {
+  .highlights {
+    padding: 28px 12px;
+  }
+
+  .statValue {
+    font-size: 1.85rem;
+  }
+
+  .statLabel {
+    font-size: 0.78rem;
+  }
+}

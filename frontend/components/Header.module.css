@@ -1,0 +1,153 @@
+.publicHeader,
+.privateHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+  z-index: 40;
+}
+
+.publicHeader {
+  position: sticky;
+  top: 0;
+  padding: 12px 22px;
+  background: rgba(15, 15, 16, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(201, 169, 106, 0.28);
+  box-shadow: 0 10px 30px rgba(15, 15, 16, 0.28);
+}
+
+.privateHeader {
+  padding: 12px 22px;
+  background: transparent;
+  border-bottom: 2px solid #e9ecef;
+  box-shadow: none;
+  z-index: 10;
+}
+
+:global(:root) {
+  --public-header-h: 76px;
+}
+
+.logoBtn,
+.brandBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.privateHeader .brandBtn {
+  margin-left: 10px;
+}
+
+.logoImg {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  background: #ffffff;
+  border: 2px solid rgba(201, 169, 106, 0.85);
+  box-shadow: 0 4px 16px rgba(201, 169, 106, 0.22);
+  display: block;
+  flex-shrink: 0;
+}
+
+.brandDivider {
+  width: 1px;
+  height: 28px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, transparent, #e9c171, transparent);
+  opacity: 0.85;
+}
+
+.brandName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #e9c171;
+  font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Times New Roman', serif;
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  text-shadow: 0 2px 18px rgba(233, 193, 113, 0.22);
+  padding: 2px 2px 0 0;
+}
+
+@media (max-width: 768px) {
+  .publicHeader,
+  .privateHeader {
+    padding: 10px 12px 10px 10px;
+  }
+
+  :global(:root) {
+    --public-header-h: 70px;
+  }
+
+  .logoBtn,
+  .brandBtn {
+    margin-left: 2px;
+    gap: 10px;
+  }
+
+  .privateHeader .brandBtn {
+    margin-left: 8px;
+  }
+
+  .logoImg {
+    width: 46px;
+    height: 46px;
+  }
+
+  .brandDivider {
+    height: 24px;
+  }
+
+  .brandName {
+    font-size: clamp(1.2rem, 3.8vw, 1.5rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .publicHeader,
+  .privateHeader {
+    padding: 8px 8px 8px 6px;
+  }
+
+  :global(:root) {
+    --public-header-h: 66px;
+  }
+
+  .logoImg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brandBtn {
+    gap: 8px;
+  }
+
+  .brandDivider {
+    display: none;
+  }
+
+  .brandName {
+    font-size: 1.12rem;
+    letter-spacing: 0.05em;
+  }
+}
