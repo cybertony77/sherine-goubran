@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Avatar, Group, Rating, Text } from '@mantine/core';
 import { Carousel } from '@mantine/carousel';
-import styles from './ReviewsCarousel.module.css';
+import styles from '../styles/ReviewsCarousel.module.css';
 
 const AUTO_MS = 5000;
 const RESUME_MS = 3000;

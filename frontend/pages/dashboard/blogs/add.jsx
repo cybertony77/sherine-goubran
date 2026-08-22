@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Title from '../../../components/Title';
 import BlogForm, { emptyBlogForm } from '../../../components/BlogForm';
 import apiClient from '../../../lib/axios';
-import styles from './blogs.module.css';
+import styles from '../../../styles/blogs.module.css';
 
 export default function AddBlogPage() {
   const router = useRouter();

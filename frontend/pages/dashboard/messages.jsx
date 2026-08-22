@@ -7,7 +7,7 @@ import Title from '../../components/Title';
 import apiClient from '../../lib/axios';
 import { formatEgyptDateTime } from '../../lib/egyptDateTime';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
-import styles from './messages.module.css';
+import styles from '../../styles/messages.module.css';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All messages', color: '#6c7a89' },

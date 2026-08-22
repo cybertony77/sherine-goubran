@@ -8,7 +8,7 @@ import Title from '../../components/Title';
 import CategorySelect from '../../components/CategorySelect';
 import AccountStateSelect from '../../components/AccountStateSelect';
 import apiClient from '../../lib/axios';
-import styles from './public_reviews.module.css';
+import styles from '../../styles/public_reviews.module.css';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;

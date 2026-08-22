@@ -6,7 +6,7 @@ import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { usePublicServices } from '../../lib/api/publicServices';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
 import { firstNameFromFullName } from '../../lib/publicSite';
-import styles from './publicServices.module.css';
+import styles from '../../styles/publicServices.module.css';
 
 export default function PublicServicesPage() {
   const { data: services = [], isLoading } = usePublicServices();

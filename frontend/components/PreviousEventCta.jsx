@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
-import styles from './PreviousEventCta.module.css';
+import styles from '../styles/PreviousEventCta.module.css';
 
 export default function PreviousEventCta({ firstName = '' }) {
   const contactLabel = firstName ? `Contact ${firstName}` : 'Get in touch';

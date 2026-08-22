@@ -19,7 +19,7 @@ import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
 import { loadHeroMediaOnce } from '../lib/heroMediaCache';
 import { isVideoMediaKey, mediaSrcFromKey } from '../lib/personalInfoMedia';
 import { firstNameFromFullName } from '../lib/publicSite';
-import styles from './index.module.css';
+import styles from '../styles/index.module.css';
 
 function typingSequence(items) {
   const texts = (Array.isArray(items) ? items : [])

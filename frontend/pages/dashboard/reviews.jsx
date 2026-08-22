@@ -16,7 +16,7 @@ import AccountStateSelect from '../../components/AccountStateSelect';
 import FromPublicSelect from '../../components/FromPublicSelect';
 import apiClient from '../../lib/axios';
 import { formatEgyptDateTime } from '../../lib/egyptDateTime';
-import styles from './reviews.module.css';
+import styles from '../../styles/dashboardReviews.module.css';
 
 const RATING_COLOR = 'rgba(242, 207, 5, 1)';
 

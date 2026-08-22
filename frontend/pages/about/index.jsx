@@ -7,7 +7,7 @@ import PublicContentLoader from '../../components/PublicContentLoader';
 import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { mediaSrcFromKey } from '../../lib/personalInfoMedia';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
-import styles from './about.module.css';
+import styles from '../../styles/about.module.css';
 
 function displayRoleLabel(value) {
   return String(value || '')

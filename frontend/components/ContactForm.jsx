@@ -8,7 +8,7 @@ import apiClient from '../lib/axios';
 import { usePublicServices } from '../lib/api/publicServices';
 import { slugifyServiceName } from '../lib/serviceSlug';
 import { formatPhoneForDB, handleEgyptPhoneKeyDown, isPhoneFilled, validateEgyptPhone } from '../lib/phoneUtils';
-import styles from './ContactForm.module.css';
+import styles from '../styles/ContactForm.module.css';
 
 const MESSAGE_MAX = 300;
 const ALL_FIELDS_ERROR = 'Please fill in all required fields';

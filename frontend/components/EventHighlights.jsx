@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import styles from './EventHighlights.module.css';
+import styles from '../styles/EventHighlights.module.css';
 
 function AnimatedValue({ value }) {
   const [n, setN] = useState(0);

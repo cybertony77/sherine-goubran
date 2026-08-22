@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatTeached, formatYears } from '../lib/marketingPageClientUtils';
-import styles from './HomeStats.module.css';
+import styles from '../styles/HomeStats.module.css';
 
 function AnimatedInteger({ value, formatter }) {
   const [n, setN] = useState(0);

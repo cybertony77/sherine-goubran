@@ -8,7 +8,7 @@ import { isPublicSitePage, firstNameFromFullName } from '../lib/publicSite';
 import { formatPhoneForDB } from '../lib/phoneUtils';
 import { isWhatsAppLinkName, resolveLinkHref, socialIconSrc } from '../lib/linksClientUtils';
 import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
-import styles from './Footer.module.css';
+import styles from '../styles/Footer.module.css';
 
 const QUICK_LINKS = [
   { href: '/', label: 'Home' },

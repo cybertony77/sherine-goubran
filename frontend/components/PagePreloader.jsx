@@ -1,4 +1,4 @@
-import styles from './PagePreloader.module.css';
+import styles from '../styles/PagePreloader.module.css';
 
 function PageName({ name }) {
   if (name === 'EVENTS & WORKSHOPS') {

@@ -13,6 +13,19 @@
   --system-body-text: #2b2b2b;
   --system-muted-text: #8a8a8a;
   --system-white: #ffffff;
+  --public-header-h: 76px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --public-header-h: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --public-header-h: 66px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

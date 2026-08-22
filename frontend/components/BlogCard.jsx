@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import ButtonArrow from './ButtonArrow';
 import { formatBlogDate, formatBlogDisplayName, blogDateIso } from '../lib/blogDisplay';
-import styles from './BlogCard.module.css';
+import styles from '../styles/BlogCard.module.css';
 
 function cardDescription(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();

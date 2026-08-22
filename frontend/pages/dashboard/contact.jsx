@@ -10,7 +10,7 @@ import apiClient from '../../lib/axios';
 import { formatPhoneForDB, validateEgyptPhone, handleEgyptPhoneKeyDown } from '../../lib/phoneUtils';
 import { personalInfoKeys } from '../../lib/api/personalInfo';
 import { mediaSrcFromKey } from '../../lib/personalInfoMedia';
-import styles from './personal_info.module.css';
+import styles from '../../styles/personal_info.module.css';
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];

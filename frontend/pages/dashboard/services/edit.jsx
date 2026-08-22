@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Title from '../../../components/Title';
 import ServiceForm, { emptyServiceForm, serviceToForm } from '../../../components/ServiceForm';
 import apiClient from '../../../lib/axios';
-import styles from './services.module.css';
+import styles from '../../../styles/services.module.css';
 
 export default function EditServicePage() {
   const router = useRouter();

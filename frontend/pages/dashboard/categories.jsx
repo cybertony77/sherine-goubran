@@ -5,7 +5,7 @@ import { IconArrowRight, IconSearch } from '@tabler/icons-react';
 import { ActionIcon, TextInput, useMantineTheme } from '@mantine/core';
 import Title from '../../components/Title';
 import apiClient from '../../lib/axios';
-import styles from './categories.module.css';
+import styles from '../../styles/categories.module.css';
 
 export function InputWithButton({ onButtonClick, onKeyDown, ...props }) {
   const theme = useMantineTheme();

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import ButtonArrow from './ButtonArrow';
-import styles from './ServiceCard.module.css';
+import styles from '../styles/ServiceCard.module.css';
 
 export default function ServiceCard({ service }) {
   const slug = String(service?.slug || '').trim();

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import GalleryLightboxImage from './GalleryLightboxImage';
 import R2VideoPlayer from './R2VideoPlayer';
 import R2VideoPoster from './R2VideoPoster';
-import styles from './EventGallery.module.css';
+import styles from '../styles/EventGallery.module.css';
 
 function PlayIcon() {
   return (

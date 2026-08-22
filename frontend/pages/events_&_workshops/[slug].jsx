@@ -18,7 +18,7 @@ import {
 } from '../../lib/eventDisplay';
 import { EVENTS_PUBLIC_PATH } from '../../lib/eventSlug';
 import { firstNameFromFullName } from '../../lib/publicSite';
-import styles from './eventDetail.module.css';
+import styles from '../../styles/eventDetail.module.css';
 
 export default function PublicEventDetailPage() {
   const router = useRouter();

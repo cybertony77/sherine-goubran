@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import AccountStateSelect from './AccountStateSelect';
 import apiClient from '../lib/axios';
-import styles from '../pages/dashboard/blogs/blogs.module.css';
+import styles from '../styles/blogs.module.css';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const SHORT_DESC_MAX = 300;

@@ -3,7 +3,7 @@ import Image from 'next/image';
 import CategorySelect from './CategorySelect';
 import AccountStateSelect from './AccountStateSelect';
 import apiClient from '../lib/axios';
-import styles from '../pages/dashboard/services/services.module.css';
+import styles from '../styles/services.module.css';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const SHORT_DESC_MAX = 250;

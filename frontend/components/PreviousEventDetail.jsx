@@ -6,7 +6,7 @@ import ReviewsCarousel from './ReviewsCarousel';
 import { formatEventDate } from '../lib/eventDate';
 import { eventStateLabel, eventTypeLabel, formatEventLocation } from '../lib/eventDisplay';
 import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
-import styles from './PreviousEventDetail.module.css';
+import styles from '../styles/PreviousEventDetail.module.css';
 
 function CheckIcon() {
   return (

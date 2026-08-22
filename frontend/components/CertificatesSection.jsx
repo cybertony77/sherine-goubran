@@ -1,6 +1,6 @@
 import CertificatesMarquee from './CertificatesMarquee';
 import { usePublicCertificates } from '../lib/api/publicCertificates';
-import styles from './CertificatesSection.module.css';
+import styles from '../styles/CertificatesSection.module.css';
 
 export default function CertificatesSection({
   eyebrow = 'Credentials',

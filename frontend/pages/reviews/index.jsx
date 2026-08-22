@@ -5,7 +5,7 @@ import ReviewsMarquee from '../../components/ReviewsMarquee';
 import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { usePublicTestimonials } from '../../lib/api/publicTestimonials';
 import { firstNameFromFullName } from '../../lib/publicSite';
-import styles from './reviews.module.css';
+import styles from '../../styles/reviews.module.css';
 
 export default function PublicReviewsPage() {
   const { data: testimonials = [], isLoading, isError } = usePublicTestimonials();

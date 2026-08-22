@@ -3,7 +3,7 @@ import UserMenu from './UserMenu';
 import { useProfile } from '../lib/api/auth';
 import { useSystemConfig } from '../lib/api/system';
 import { isPublicSitePage } from '../lib/publicSite';
-import styles from './Header.module.css';
+import styles from '../styles/Header.module.css';
 
 const FALLBACK_SYSTEM_NAME =
   String(process.env.NEXT_PUBLIC_SYSTEM_NAME || '').trim() || 'Sherine Goubran';

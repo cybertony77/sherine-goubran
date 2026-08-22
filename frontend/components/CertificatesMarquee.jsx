@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import styles from './CertificatesMarquee.module.css';
+import styles from '../styles/CertificatesMarquee.module.css';
 
 const SPEED_PX_S = 22;
 const DRAG_THRESHOLD = 8;

@@ -1,4 +1,4 @@
-import styles from './PublicContentLoader.module.css';
+import styles from '../styles/PublicContentLoader.module.css';
 
 /**
  * In-page loading state for public portfolio pages.

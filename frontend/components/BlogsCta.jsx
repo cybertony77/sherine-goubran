@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePersonalInfo } from '../lib/api/personalInfo';
 import { firstNameFromFullName } from '../lib/publicSite';
-import styles from './BlogsCta.module.css';
+import styles from '../styles/BlogsCta.module.css';
 
 export default function BlogsCta({ variant = 'listing' }) {
   const { data: personalInfo } = usePersonalInfo();

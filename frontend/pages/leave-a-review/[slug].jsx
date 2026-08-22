@@ -5,7 +5,7 @@ import Link from 'next/link';
 import axios from 'axios';
 import { Group, Rating, Text } from '@mantine/core';
 import FullPageActionLoader from '../../components/FullPageActionLoader';
-import styles from './[slug].module.css';
+import styles from '../../styles/leaveAReview.module.css';
 
 const RATING_COLOR = 'rgba(242, 207, 5, 1)';
 

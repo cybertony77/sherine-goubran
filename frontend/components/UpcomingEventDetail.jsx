@@ -16,7 +16,7 @@ import {
   splitEventDescription,
 } from '../lib/eventDisplay';
 import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
-import styles from './UpcomingEventDetail.module.css';
+import styles from '../styles/UpcomingEventDetail.module.css';
 
 function benefitNumber(index) {
   return String(index + 1).padStart(2, '0');

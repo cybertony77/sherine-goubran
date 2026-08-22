@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import styles from './PublicSelect.module.css';
+import styles from '../styles/PublicSelect.module.css';
 
 export default function PublicSelect({
   id,

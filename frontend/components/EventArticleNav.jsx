@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { eventTypeLabel } from '../lib/eventDisplay';
 import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
-import styles from './EventArticleNav.module.css';
+import styles from '../styles/EventArticleNav.module.css';
 
 function eventHref(slug) {
   const value = String(slug || '').trim();

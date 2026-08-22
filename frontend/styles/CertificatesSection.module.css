@@ -6,7 +6,7 @@
   overflow: hidden;
 }
 
-:global([data-stats-section='true']) + :global([data-certs-section='true']) {
+:global([data-stats-section='true']) + .certs {
   padding-top: 56px;
 }
 
@@ -71,7 +71,7 @@
 }
 
 @media (max-width: 768px) {
-  :global([data-stats-section='true']) + :global([data-certs-section='true']) {
+  :global([data-stats-section='true']) + .certs {
     padding-top: 44px;
   }
 
@@ -90,7 +90,7 @@
 }
 
 @media (max-width: 480px) {
-  :global([data-stats-section='true']) + :global([data-certs-section='true']) {
+  :global([data-stats-section='true']) + .certs {
     padding-top: 36px;
   }
 

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePersonalInfo } from '../lib/api/personalInfo';
 import { formatPhoneForDB } from '../lib/phoneUtils';
 import { firstNameFromFullName } from '../lib/publicSite';
-import styles from './EventsCta.module.css';
+import styles from '../styles/EventsCta.module.css';
 
 function askQuestionMessage(variant, eventName, eventType) {
   const name = String(eventName || '').trim();

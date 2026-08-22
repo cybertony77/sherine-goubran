@@ -28,10 +28,6 @@
   z-index: 10;
 }
 
-:global(:root) {
-  --public-header-h: 76px;
-}
-
 .logoBtn,
 .brandBtn {
   display: inline-flex;
@@ -95,10 +91,6 @@
     padding: 10px 12px 10px 10px;
   }
 
-  :global(:root) {
-    --public-header-h: 70px;
-  }
-
   .logoBtn,
   .brandBtn {
     margin-left: 2px;
@@ -127,10 +119,6 @@
   .publicHeader,
   .privateHeader {
     padding: 8px 8px 8px 6px;
-  }
-
-  :global(:root) {
-    --public-header-h: 66px;
   }
 
   .logoImg {

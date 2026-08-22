@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Avatar, Rating } from '@mantine/core';
-import styles from './ReviewsMarquee.module.css';
+import styles from '../styles/ReviewsMarquee.module.css';
 
 const MIN_ROW_CARDS = 6;
 const READ_MORE_CHARS = 220;

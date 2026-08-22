@@ -8,7 +8,7 @@ import Title from '../../../components/Title';
 import AccountStateSelect from '../../../components/AccountStateSelect';
 import apiClient from '../../../lib/axios';
 import { formatEgyptDateTime } from '../../../lib/egyptDateTime';
-import styles from './blogs.module.css';
+import styles from '../../../styles/blogs.module.css';
 
 function InputWithButton(props) {
   const theme = useMantineTheme();

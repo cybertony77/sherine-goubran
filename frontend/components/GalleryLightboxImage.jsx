@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import styles from './EventGallery.module.css';
+import styles from '../styles/EventGallery.module.css';
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;

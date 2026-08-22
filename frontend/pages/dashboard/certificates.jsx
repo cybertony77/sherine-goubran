@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Title from '../../components/Title';
 import apiClient from '../../lib/axios';
-import styles from './certificates.module.css';
+import styles from '../../styles/certificates.module.css';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = [

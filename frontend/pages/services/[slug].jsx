@@ -12,7 +12,7 @@ import { firstNameFromFullName } from '../../lib/publicSite';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
 import { contactHrefForService } from '../../lib/serviceSlug';
 import ButtonArrow from '../../components/ButtonArrow';
-import styles from './serviceDetail.module.css';
+import styles from '../../styles/serviceDetail.module.css';
 
 function splitLongDescription(text) {
   const raw = String(text || '')

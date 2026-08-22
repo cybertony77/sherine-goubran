@@ -13,7 +13,7 @@ import { isWhatsAppLinkName, resolveLinkHref, socialIconSrc } from '../lib/links
 import AppVideosModal from './AppVideosModal';
 import apiClient from '../lib/axios';
 import Image from 'next/image';
-import styles from './UserMenu.module.css';
+import styles from '../styles/UserMenu.module.css';
 
 export default function UserMenu() {
   const [opened, { toggle, close }] = useDisclosure(false);

@@ -6,7 +6,7 @@ import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { mediaSrcFromKey } from '../../lib/personalInfoMedia';
 import { firstNameFromFullName } from '../../lib/publicSite';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
-import styles from './contact.module.css';
+import styles from '../../styles/contact.module.css';
 
 function displayPhone(value) {
   const digits = formatPhoneForDB(value);

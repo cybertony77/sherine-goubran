@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { adjacentBlogs, formatBlogDisplayName } from '../lib/blogDisplay';
-import styles from './BlogArticleNav.module.css';
+import styles from '../styles/BlogArticleNav.module.css';
 
 function blogHref(slug) {
   const value = String(slug || '').trim();

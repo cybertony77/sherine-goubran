@@ -16,7 +16,7 @@ import {
 } from '../../lib/linksClientUtils';
 import { personalInfoKeys } from '../../lib/api/personalInfo';
 import { resetHeroMediaCache } from '../../lib/heroMediaCache';
-import styles from './personal_info.module.css';
+import styles from '../../styles/personal_info.module.css';
 import linkStyles from '../../styles/links.module.css';
 
 const MAX_HERO_BYTES = 4 * 1024 * 1024 * 1024; // 4 GB

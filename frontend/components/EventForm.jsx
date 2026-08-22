@@ -6,7 +6,7 @@ import AccountStateSelect from './AccountStateSelect';
 import R2VideoPlayer from './R2VideoPlayer';
 import apiClient from '../lib/axios';
 import { uploadToR2Direct } from '../lib/r2DirectUpload';
-import styles from '../pages/dashboard/events_workshops/events_workshops.module.css';
+import styles from '../styles/events_workshops.module.css';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;

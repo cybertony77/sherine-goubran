@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import styles from './AppVideosModal.module.css';
+import styles from '../styles/AppVideosModal.module.css';
 
 function detectLinkKind(url) {
   const lower = String(url || '').toLowerCase();

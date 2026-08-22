@@ -3,7 +3,7 @@ import BlogsCta from '../../components/BlogsCta';
 import PublicContentLoader from '../../components/PublicContentLoader';
 import { sortPublicBlogsOldestFirst } from '../../lib/blogDisplay';
 import { usePublicBlogs } from '../../lib/api/publicBlogs';
-import styles from './publicBlogs.module.css';
+import styles from '../../styles/publicBlogs.module.css';
 
 export default function PublicBlogsPage() {
   const { data: blogs = [], isLoading } = usePublicBlogs();

@@ -3,7 +3,7 @@ import ButtonArrow from './ButtonArrow';
 import { formatEventDate } from '../lib/eventDate';
 import { storeEventPreloaderName } from '../lib/eventDisplay';
 import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
-import styles from './EventCard.module.css';
+import styles from '../styles/EventCard.module.css';
 
 export default function EventCard({ event, revealDelay = 0 }) {
   const slug = String(event?.slug || '').trim();

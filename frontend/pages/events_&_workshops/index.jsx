@@ -6,7 +6,7 @@ import PublicContentLoader from '../../components/PublicContentLoader';
 import PublicSelect from '../../components/PublicSelect';
 import { usePublicEvents } from '../../lib/api/publicEvents';
 import { filterPublicEvents, sortFilteredEvents } from '../../lib/eventDisplay';
-import styles from './publicEvents.module.css';
+import styles from '../../styles/publicEvents.module.css';
 
 const TYPE_OPTIONS = [
   { value: 'all', label: 'All' },

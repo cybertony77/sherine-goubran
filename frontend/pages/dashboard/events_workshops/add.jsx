@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Title from '../../../components/Title';
 import EventForm, { emptyEventForm } from '../../../components/EventForm';
 import apiClient from '../../../lib/axios';
-import styles from './events_workshops.module.css';
+import styles from '../../../styles/events_workshops.module.css';
 
 export default function AddEventWorkshopPage() {
   const router = useRouter();

@@ -9,7 +9,7 @@ import {
   splitBlogParagraphs,
 } from '../../lib/blogDisplay';
 import { usePublicBlog, usePublicBlogs } from '../../lib/api/publicBlogs';
-import styles from './publicBlogs.module.css';
+import styles from '../../styles/publicBlogs.module.css';
 
 export default function PublicBlogDetailPage() {
   const router = useRouter();
