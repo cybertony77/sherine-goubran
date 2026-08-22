@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Title from "../components/Title";
 import { useProfile, useUpdateProfile, useProfilePicture } from '../lib/api/auth';
 import { useCheckUsername } from '../lib/api/assistants';
-import apiClient from '../lib/axios';
+import { uploadToCloudinaryDirect } from '../lib/cloudinaryDirectUpload';
 import Image from 'next/image';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -113,27 +113,17 @@ export default function EditMyProfile() {
     };
     reader.readAsDataURL(file);
 
-    // Upload to Cloudinary
+    // Upload to Cloudinary (direct — avoids Next.js 413 on base64 body)
     setUploadingImage(true);
     setError('');
     
     try {
-      // Convert file to base64
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      const result = await uploadToCloudinaryDirect(file, {
+        folder: 'profile-pictures',
       });
 
-      const response = await apiClient.post('/api/upload/profile-picture', {
-        file: base64,
-        fileName: file.name,
-        fileType: file.type
-      });
-
-      if (response.data.success && response.data.public_id) {
-        const newPublicId = response.data.public_id;
+      if (result?.public_id) {
+        const newPublicId = result.public_id;
         setForm(prev => ({ ...prev, profile_picture: newPublicId }));
       } else {
         throw new Error('Upload failed');

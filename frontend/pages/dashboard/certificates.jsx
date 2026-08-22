@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Title from '../../components/Title';
 import apiClient from '../../lib/axios';
+import { uploadToCloudinaryDirect } from '../../lib/cloudinaryDirectUpload';
 import styles from '../../styles/certificates.module.css';
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -110,21 +111,6 @@ export default function CertificatesPage() {
     setFieldErrors((prev) => prev.filter((f) => f !== `slot_${index}` && f !== 'certificates'));
   };
 
-  const fileToBase64 = (file, onProgress) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onprogress = (e) => {
-        if (!e.lengthComputable) return;
-        onProgress?.(Math.max(1, Math.round((e.loaded / e.total) * 25)));
-      };
-      reader.onload = () => {
-        onProgress?.(28);
-        resolve(reader.result);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
   const uploadImage = async (index, file) => {
     if (!canManage) return;
 
@@ -150,33 +136,18 @@ export default function CertificatesPage() {
 
     try {
       const localPreview = URL.createObjectURL(file);
-      updateSlot(index, { preview: localPreview, progress: 8 });
+      updateSlot(index, { preview: localPreview, progress: 5 });
 
-      const base64 = await fileToBase64(file, (p) => updateSlot(index, { progress: p }));
-      updateSlot(index, { progress: 32 });
+      const result = await uploadToCloudinaryDirect(file, {
+        folder: 'certificates',
+        onProgress: (p) => updateSlot(index, { progress: Math.max(5, Math.min(99, p)) }),
+      });
 
-      const response = await apiClient.post(
-        '/api/upload/certificate-image',
-        {
-          file: base64,
-          fileName: file.name,
-          fileType: file.type,
-        },
-        {
-          onUploadProgress: (e) => {
-            if (e.total && e.total > 0) {
-              const networkPct = Math.round((e.loaded / e.total) * 63);
-              updateSlot(index, { progress: Math.min(95, 32 + networkPct) });
-            }
-          },
-        }
-      );
-
-      if (!response.data?.success || !response.data?.public_id) {
+      if (!result?.public_id) {
         throw new Error('Upload failed');
       }
 
-      const publicId = response.data.public_id;
+      const publicId = result.public_id;
       const signed = await resolvePreview(publicId);
       updateSlot(index, {
         src: publicId,

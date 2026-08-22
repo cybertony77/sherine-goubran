@@ -4,6 +4,7 @@ import AccountStateSelect from './AccountStateSelect';
 import CertificateStudentsSelect from './CertificateStudentsSelect';
 import FontFamilySelect from './FontFamilySelect';
 import apiClient from '../lib/axios';
+import { uploadToCloudinaryDirect } from '../lib/cloudinaryDirectUpload';
 import {
   fontCssFamily,
   fontWeightFor,
@@ -344,45 +345,17 @@ export default function CertificateForm({
     setDragOver(false);
 
     try {
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onprogress = (e) => {
-          if (!e.lengthComputable) return;
-          // Reading file: 0 → 25%
-          setUploadProgress(Math.max(1, Math.round((e.loaded / e.total) * 25)));
-        };
-        reader.onload = () => {
-          setUploadProgress(28);
-          resolve(reader.result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      const localPreview = URL.createObjectURL(file);
+      setPreviewSrc(localPreview);
+      setUploadProgress(5);
+
+      const result = await uploadToCloudinaryDirect(file, {
+        folder: 'certificates',
+        onProgress: (p) => setUploadProgress(Math.max(5, Math.min(99, p))),
       });
-      setPreviewSrc(base64);
-      setUploadProgress(32);
 
-      const response = await apiClient.post(
-        '/api/upload/certificate-image',
-        {
-          file: base64,
-          fileName: file.name,
-          fileType: file.type,
-        },
-        {
-          onUploadProgress: (e) => {
-            if (e.total && e.total > 0) {
-              // Network upload: 32 → 95%
-              const networkPct = Math.round((e.loaded / e.total) * 63);
-              setUploadProgress(Math.min(95, 32 + networkPct));
-            } else {
-              setUploadProgress((prev) => Math.min(90, Math.max(prev, prev + 3)));
-            }
-          },
-        }
-      );
-
-      if (response.data?.success && response.data?.public_id) {
-        setFormData((prev) => ({ ...prev, certificate_image: response.data.public_id }));
+      if (result?.public_id) {
+        setFormData((prev) => ({ ...prev, certificate_image: result.public_id }));
         clearFieldError('certificate_image');
         setUploadProgress(100);
         setUploadSuccessFlash(true);

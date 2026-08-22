@@ -1,6 +1,10 @@
 .overlay {
   position: fixed;
   inset: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   width: 100%;
   max-width: 100vw;
   height: 100%;
@@ -10,6 +14,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
   overflow: hidden;
   pointer-events: auto;
   background: var(--system-page-bg, #0f0f10);
@@ -39,20 +46,32 @@
   justify-content: center;
   gap: 18px;
   width: min(92vw, 720px);
-  padding: 24px 16px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 24px 20px;
+  box-sizing: border-box;
   text-align: center;
 }
 
 .pageName {
   margin: 0;
+  width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
   color: var(--system-surface, #f7f4ee);
   font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Times New Roman', serif;
-  font-size: clamp(2rem, 5.6vw, 3.75rem);
+  font-size: clamp(1.85rem, 5.2vw, 3.75rem);
   font-weight: 500;
   letter-spacing: 0.28em;
-  line-height: 1.15;
+  /* Offset trailing letter-spacing so the glyph block reads optically centered */
+  padding-inline-end: 0;
+  padding-inline-start: 0.28em;
+  line-height: 1.2;
+  text-align: center;
   text-transform: uppercase;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  hyphens: none;
   opacity: 0;
   transform: translateY(20px);
 }
@@ -64,6 +83,8 @@
 .line {
   width: 56px;
   height: 1px;
+  flex-shrink: 0;
+  margin: 0 auto;
   background: var(--system-secondary, #c9a96a);
   opacity: 0;
   transform: translateY(20px);
@@ -88,10 +109,36 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .content {
+    width: min(94vw, 720px);
+    padding: 20px 16px;
+    gap: 14px;
+  }
+
   .pageName {
-    font-size: clamp(1.55rem, 8vw, 2.15rem);
-    letter-spacing: 0.18em;
+    font-size: clamp(1.45rem, 7.2vw, 2.35rem);
+    letter-spacing: 0.2em;
+    padding-inline-start: 0.2em;
+    line-height: 1.25;
+  }
+
+  .line {
+    width: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    width: min(96vw, 720px);
+    padding: 16px 12px;
+    gap: 12px;
+  }
+
+  .pageName {
+    font-size: clamp(1.28rem, 8.5vw, 1.85rem);
+    letter-spacing: 0.14em;
+    padding-inline-start: 0.14em;
   }
 
   .mobileBreak {
@@ -99,7 +146,15 @@
   }
 
   .line {
-    width: 40px;
+    width: 36px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pageName {
+    font-size: clamp(1.15rem, 9vw, 1.55rem);
+    letter-spacing: 0.1em;
+    padding-inline-start: 0.1em;
   }
 }
 

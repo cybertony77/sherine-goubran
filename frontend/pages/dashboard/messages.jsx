@@ -148,7 +148,7 @@ export default function DashboardMessagesPage() {
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchOnMount: 'always',
-    refetchInterval: 8000,
+    refetchInterval: 5000,
   });
 
   const { data: servicesData } = useQuery({

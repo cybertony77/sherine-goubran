@@ -534,6 +534,27 @@ export default function UserMenu() {
               </>
             ) : null}
           </div>
+
+          <div className={styles.menuFooter}>
+            <div className={styles.waSection}>
+              <button
+                type="button"
+                className={styles.waBtn}
+                onClick={() => navigate('/')}
+                aria-label="Open website home"
+              >
+                <Image
+                  src="/online2.svg"
+                  alt=""
+                  width={22}
+                  height={22}
+                  className={`${styles.waIcon} ${styles.websiteIcon}`}
+                  aria-hidden="true"
+                />
+                <span className={styles.waLabel}>Website</span>
+              </button>
+            </div>
+          </div>
             </>
           )}
         </div>

@@ -6,6 +6,7 @@ import AccountStateSelect from './AccountStateSelect';
 import R2VideoPlayer from './R2VideoPlayer';
 import apiClient from '../lib/axios';
 import { uploadToR2Direct } from '../lib/r2DirectUpload';
+import { uploadToCloudinaryDirect } from '../lib/cloudinaryDirectUpload';
 import styles from '../styles/events_workshops.module.css';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -149,30 +150,16 @@ export default function EventForm({
     }
 
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(5);
     setLocalError('');
 
     try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      const result = await uploadToCloudinaryDirect(file, {
+        folder: 'events',
+        onProgress: (p) => setUploadProgress(Math.max(5, Math.min(99, p))),
       });
 
-      setUploadProgress(40);
-      const { data } = await apiClient.post(
-        '/api/upload/event-image',
-        { file: dataUrl, fileType: file.type },
-        {
-          onUploadProgress: (evt) => {
-            if (!evt.total) return;
-            setUploadProgress(40 + Math.round((evt.loaded / evt.total) * 50));
-          },
-        }
-      );
-
-      const url = data?.url;
+      const url = result?.secure_url;
       if (!url) throw new Error('No image URL returned');
 
       setForm((s) => ({
@@ -273,36 +260,24 @@ export default function EventForm({
     setForm((s) => ({
       ...s,
       galleryPhotos: s.galleryPhotos.map((slot, i) =>
-        i === index ? { ...slot, uploading: true, progress: 10, error: '' } : slot
+        i === index ? { ...slot, uploading: true, progress: 5, error: '' } : slot
       ),
     }));
 
     try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      const result = await uploadToCloudinaryDirect(file, {
+        folder: 'events-gallery',
+        onProgress: (p) => {
+          setForm((s) => ({
+            ...s,
+            galleryPhotos: s.galleryPhotos.map((slot, i) =>
+              i === index ? { ...slot, progress: Math.max(5, Math.min(99, p)) } : slot
+            ),
+          }));
+        },
       });
 
-      const { data } = await apiClient.post(
-        '/api/upload/event-gallery-image',
-        { file: dataUrl, fileType: file.type },
-        {
-          onUploadProgress: (evt) => {
-            if (!evt.total) return;
-            const progress = 20 + Math.round((evt.loaded / evt.total) * 70);
-            setForm((s) => ({
-              ...s,
-              galleryPhotos: s.galleryPhotos.map((slot, i) =>
-                i === index ? { ...slot, progress } : slot
-              ),
-            }));
-          },
-        }
-      );
-
-      const url = data?.url;
+      const url = result?.secure_url;
       if (!url) throw new Error('No image URL returned');
 
       setForm((s) => ({

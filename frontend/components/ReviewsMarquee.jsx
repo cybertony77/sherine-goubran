@@ -8,6 +8,8 @@ const READ_MORE_CHARS = 220;
 const DRAG_THRESHOLD = 8;
 const SPEED_LEFT_PX_S = 48;
 const SPEED_RIGHT_PX_S = 52;
+/** Show a third marquee row once activated reviews reach this count. */
+const THIRD_ROW_MIN = 30;
 
 function prefersReducedMotion() {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
@@ -20,10 +22,19 @@ function hasHoverPointer() {
 }
 
 function splitRows(list) {
-  if (!list.length) return [[], []];
+  if (!list.length) return [];
   if (list.length === 1) return [list, list];
-  const mid = Math.ceil(list.length / 2);
-  return [list.slice(0, mid), list.slice(mid)];
+
+  const useThreeRows = list.length >= THIRD_ROW_MIN;
+  const rowCount = useThreeRows ? 3 : 2;
+  const rows = Array.from({ length: rowCount }, () => []);
+
+  list.forEach((item, index) => {
+    rows[index % rowCount].push(item);
+  });
+
+  // Keep every row non-empty for the marquee loop.
+  return rows.map((row) => (row.length ? row : rows.find((r) => r.length) || list));
 }
 
 function padRow(items) {
@@ -342,14 +353,20 @@ export default function ReviewsMarquee({ testimonials = [] }) {
       ),
     [testimonials]
   );
-  const [row1, row2] = useMemo(() => splitRows(list), [list]);
+  const rows = useMemo(() => splitRows(list), [list]);
+  const directions = ['right', 'left', 'right'];
 
   if (!list.length) return null;
 
   return (
     <div className={styles.board}>
-      <TestimonialMarqueeRow testimonials={row1} direction="right" />
-      <TestimonialMarqueeRow testimonials={row2.length ? row2 : row1} direction="left" />
+      {rows.map((row, index) => (
+        <TestimonialMarqueeRow
+          key={`reviews-row-${index}`}
+          testimonials={row}
+          direction={directions[index % directions.length]}
+        />
+      ))}
     </div>
   );
 }

@@ -23,10 +23,16 @@ import { getCloudinaryCredentials } from '../../../lib/cloudinaryConfig';
 const FOLDER_POLICY = {
   // Images (private delivery, signed URLs to view).
   'profile-pictures': { resource_type: 'image', type: 'private' },
-  'certificates': { resource_type: 'image', type: 'private' },
+  certificates: { resource_type: 'image', type: 'private' },
   'homeworks-questions-images': { resource_type: 'image', type: 'private' },
   'quizzes-questions-images': { resource_type: 'image', type: 'private' },
   'mock-exams-questions-images': { resource_type: 'image', type: 'private' },
+  // Public site images (direct browser → Cloudinary; avoids Next.js 413).
+  services: { resource_type: 'image', type: 'upload' },
+  blogs: { resource_type: 'image', type: 'upload' },
+  events: { resource_type: 'image', type: 'upload' },
+  'events-gallery': { resource_type: 'image', type: 'upload' },
+  'public-testimonials': { resource_type: 'image', type: 'upload' },
   // PDFs (publicly accessible raw delivery).
   'HW-PDFs': { resource_type: 'raw', type: 'upload' },
   'Quizs-PDFs': { resource_type: 'raw', type: 'upload' },
@@ -103,7 +109,14 @@ export default function handler(req, res) {
       max_bytes:
         folder === 'material'
           ? 200 * 1024 * 1024
-          : folder === 'profile-pictures' || folder.includes('questions-images')
+          : folder === 'profile-pictures' ||
+              folder.includes('questions-images') ||
+              folder === 'certificates' ||
+              folder === 'services' ||
+              folder === 'blogs' ||
+              folder === 'events' ||
+              folder === 'events-gallery' ||
+              folder === 'public-testimonials'
             ? 10 * 1024 * 1024
             : 100 * 1024 * 1024,
     });

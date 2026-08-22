@@ -13,6 +13,8 @@ export default function Dashboard() {
     },
     staleTime: 0,
     refetchOnWindowFocus: true,
+    refetchOnMount: 'always',
+    refetchInterval: 5000,
   });
   const newMessagesCount = messagesSummary?.newCount || 0;
 

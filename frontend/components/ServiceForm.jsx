@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import CategorySelect from './CategorySelect';
 import AccountStateSelect from './AccountStateSelect';
-import apiClient from '../lib/axios';
+import { uploadToCloudinaryDirect } from '../lib/cloudinaryDirectUpload';
 import styles from '../styles/services.module.css';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -96,30 +96,16 @@ export default function ServiceForm({
     }
 
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(5);
     setLocalError('');
 
     try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      const result = await uploadToCloudinaryDirect(file, {
+        folder: 'services',
+        onProgress: (p) => setUploadProgress(Math.max(5, Math.min(99, p))),
       });
 
-      setUploadProgress(40);
-      const { data } = await apiClient.post(
-        '/api/upload/service-image',
-        { file: dataUrl, fileType: file.type },
-        {
-          onUploadProgress: (evt) => {
-            if (!evt.total) return;
-            setUploadProgress(40 + Math.round((evt.loaded / evt.total) * 50));
-          },
-        }
-      );
-
-      const url = data?.url;
+      const url = result?.secure_url;
       if (!url) throw new Error('No image URL returned');
 
       setForm((s) => ({

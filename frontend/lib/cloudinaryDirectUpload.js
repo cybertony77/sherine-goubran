@@ -17,7 +17,7 @@ const UPLOAD_TIMEOUT_MS = 30 * 60 * 1000;
 
 /**
  * @typedef {Object} DirectUploadOptions
- * @property {('profile-pictures'|'homeworks-questions-images'|'quizzes-questions-images'|'mock-exams-questions-images'|'HW-PDFs'|'Quizs-PDFs'|'MockExams-PDFs'|'material')} folder
+ * @property {('profile-pictures'|'homeworks-questions-images'|'quizzes-questions-images'|'mock-exams-questions-images'|'HW-PDFs'|'Quizs-PDFs'|'MockExams-PDFs'|'material'|'services'|'blogs'|'events'|'events-gallery'|'public-testimonials'|'certificates')} folder
  * @property {(percent:number) => void} [onProgress]    0-100
  * @property {AbortSignal} [signal]                     cancel mid-upload
  */

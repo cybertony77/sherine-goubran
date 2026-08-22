@@ -8,6 +8,7 @@ import Title from '../../components/Title';
 import CategorySelect from '../../components/CategorySelect';
 import AccountStateSelect from '../../components/AccountStateSelect';
 import apiClient from '../../lib/axios';
+import { uploadToCloudinaryDirect } from '../../lib/cloudinaryDirectUpload';
 import styles from '../../styles/public_reviews.module.css';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
@@ -218,30 +219,16 @@ export default function PublicReviewsPage() {
     }
 
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(5);
     setError('');
 
     try {
-      const reader = new FileReader();
-      const dataUrl = await new Promise((resolve, reject) => {
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      const result = await uploadToCloudinaryDirect(file, {
+        folder: 'public-testimonials',
+        onProgress: (p) => setUploadProgress(Math.max(5, Math.min(99, p))),
       });
 
-      setUploadProgress(40);
-      const { data } = await apiClient.post(
-        '/api/upload/public-testimonial-image',
-        { file: dataUrl, fileType: file.type },
-        {
-          onUploadProgress: (evt) => {
-            if (!evt.total) return;
-            setUploadProgress(40 + Math.round((evt.loaded / evt.total) * 50));
-          },
-        }
-      );
-
-      const url = data?.url;
+      const url = result?.secure_url;
       if (!url) throw new Error('No image URL returned');
 
       applyTo({ image: url, preview: url });
