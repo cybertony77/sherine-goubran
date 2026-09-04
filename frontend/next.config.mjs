@@ -40,6 +40,19 @@ function loadEnvConfig() {
 const fileEnv = loadEnvConfig();
 const systemName =
   String(fileEnv.SYSTEM_NAME || process.env.SYSTEM_NAME || '').trim() || 'Sherine Goubran';
+const systemDomainRaw =
+  String(fileEnv.SYSTEM_DOMAIN || process.env.SYSTEM_DOMAIN || process.env.NEXT_PUBLIC_SITE_URL || '')
+    .trim() || 'https://sherinegoubran.com';
+let systemSiteUrl = 'https://sherinegoubran.com';
+try {
+  const withProtocol = /^https?:\/\//i.test(systemDomainRaw)
+    ? systemDomainRaw
+    : `https://${systemDomainRaw}`;
+  const parsed = new URL(withProtocol);
+  systemSiteUrl = `${parsed.protocol}//${parsed.host}`;
+} catch {
+  systemSiteUrl = 'https://sherinegoubran.com';
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -48,6 +61,7 @@ const nextConfig = {
   devIndicators: false,
   env: {
     NEXT_PUBLIC_SYSTEM_NAME: systemName,
+    NEXT_PUBLIC_SITE_URL: systemSiteUrl,
   },
   // Keep next/image unoptimized for now (we serve Cloudinary URLs that already
   // expose their own CDN-level optimizations). `remotePatterns` is still

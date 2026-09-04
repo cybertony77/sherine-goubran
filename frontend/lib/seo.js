@@ -1,38 +1,26 @@
-import { loadEnvConfig } from './marketingPageMongo';
-
+// Client-safe: do not import Node modules (fs) here — pages import this file in the browser.
 const FALLBACK_SITE_NAME = 'Sherine Goubran';
 const FALLBACK_ORIGIN = 'https://sherinegoubran.com';
 const FALLBACK_DESCRIPTION =
   'Life coaching, services, events, workshops, and insights from Sherine Goubran — supporting growth, clarity, and meaningful change.';
 
 export function getSiteName() {
-  try {
-    const env = loadEnvConfig();
-    return (
-      String(env.SYSTEM_NAME || process.env.SYSTEM_NAME || process.env.NEXT_PUBLIC_SYSTEM_NAME || '')
-        .trim() || FALLBACK_SITE_NAME
-    );
-  } catch {
-    return (
-      String(process.env.SYSTEM_NAME || process.env.NEXT_PUBLIC_SYSTEM_NAME || '').trim() ||
-      FALLBACK_SITE_NAME
-    );
-  }
+  return (
+    String(
+      process.env.NEXT_PUBLIC_SYSTEM_NAME || process.env.SYSTEM_NAME || ''
+    ).trim() || FALLBACK_SITE_NAME
+  );
 }
 
 export function getSiteOrigin() {
-  try {
-    const env = loadEnvConfig();
-    const raw =
-      String(env.SYSTEM_DOMAIN || process.env.SYSTEM_DOMAIN || process.env.NEXT_PUBLIC_SITE_URL || '')
-        .trim() || FALLBACK_ORIGIN;
-    return normalizeOrigin(raw);
-  } catch {
-    const raw =
-      String(process.env.SYSTEM_DOMAIN || process.env.NEXT_PUBLIC_SITE_URL || '').trim() ||
-      FALLBACK_ORIGIN;
-    return normalizeOrigin(raw);
-  }
+  const raw =
+    String(
+      process.env.NEXT_PUBLIC_SITE_URL ||
+        process.env.SYSTEM_DOMAIN ||
+        process.env.NEXT_PUBLIC_SYSTEM_DOMAIN ||
+        ''
+    ).trim() || FALLBACK_ORIGIN;
+  return normalizeOrigin(raw);
 }
 
 export function normalizeOrigin(value) {
