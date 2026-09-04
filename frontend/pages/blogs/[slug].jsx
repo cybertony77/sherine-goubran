@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import BlogArticleNav from '../../components/BlogArticleNav';
 import BlogsCta from '../../components/BlogsCta';
 import PublicContentLoader from '../../components/PublicContentLoader';
+import SiteSeo from '../../components/SiteSeo';
 import {
   blogDateIso,
   formatBlogDate,
@@ -9,25 +10,39 @@ import {
   splitBlogParagraphs,
 } from '../../lib/blogDisplay';
 import { usePublicBlog, usePublicBlogs } from '../../lib/api/publicBlogs';
+import {
+  absoluteMediaUrl,
+  absoluteUrl,
+  blogPostingJsonLd,
+  breadcrumbJsonLd,
+  getSiteName,
+  truncateMeta,
+} from '../../lib/seo';
+import { fetchPublicBlogBySlug } from '../../lib/seoPublicData.server';
 import styles from '../../styles/publicBlogs.module.css';
 
-export default function PublicBlogDetailPage() {
+export default function PublicBlogDetailPage({ initialBlog = null }) {
   const router = useRouter();
   const slug = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
-  const { data: blog, isLoading, isError } = usePublicBlog(slug);
+  const { data: blog, isLoading, isError } = usePublicBlog(slug, {
+    initialData: initialBlog || undefined,
+  });
   const { data: blogs = [] } = usePublicBlogs();
+  const siteName = getSiteName();
 
-  if (isLoading || !router.isReady) {
+  if ((isLoading && !initialBlog) || !router.isReady) {
     return (
       <main className={styles.page}>
+        <SiteSeo title="Blogs" path="/blogs" />
         <PublicContentLoader label="Loading blog" />
       </main>
     );
   }
 
-  if (isError || !blog) {
+  if ((isError && !blog) || !blog) {
     return (
       <main className={styles.page}>
+        <SiteSeo title="Blog not found" path={`/blogs/${encodeURIComponent(String(slug || ''))}`} noindex />
         <div className={styles.inner}>
           <div className={styles.empty}>
             <span className={styles.emptyLine} aria-hidden="true" />
@@ -46,9 +61,36 @@ export default function PublicBlogDetailPage() {
   const dateLabel = formatBlogDate(blog.createdAt);
   const dateIso = blogDateIso(blog.createdAt);
   const paragraphs = splitBlogParagraphs(blog.longDescription || blog.shortDescription);
+  const blogPath = `/blogs/${encodeURIComponent(String(blog.slug || slug || '').trim())}`;
+  const seoDescription = truncateMeta(
+    blog.shortDescription || paragraphs[0] || blog.longDescription || ''
+  );
 
   return (
     <main className={styles.page}>
+      <SiteSeo
+        title={title}
+        description={seoDescription}
+        path={blogPath}
+        image={blog.image}
+        type="article"
+        keywords={[title, 'blog', siteName]}
+        jsonLd={[
+          blogPostingJsonLd({
+            title,
+            description: seoDescription,
+            url: absoluteUrl(blogPath),
+            image: absoluteMediaUrl(blog.image),
+            datePublished: dateIso || undefined,
+            authorName: siteName,
+          }),
+          breadcrumbJsonLd([
+            { name: 'Blogs', url: absoluteUrl('/blogs') },
+            { name: title, url: absoluteUrl(blogPath) },
+          ]),
+        ]}
+      />
+
       <article className={styles.detail}>
         <header className={styles.detailHead}>
           <p className={styles.eyebrow}>Insights & Stories</p>
@@ -87,4 +129,18 @@ export default function PublicBlogDetailPage() {
       <BlogsCta variant="detail" />
     </main>
   );
+}
+
+export async function getServerSideProps(context) {
+  const slug = Array.isArray(context.params?.slug)
+    ? context.params.slug[0]
+    : context.params?.slug;
+  try {
+    const initialBlog = await fetchPublicBlogBySlug(slug);
+    if (!initialBlog) return { notFound: true };
+    return { props: { initialBlog } };
+  } catch (err) {
+    console.error('[seo] blog slug fetch failed:', err?.message || err);
+    return { props: { initialBlog: null } };
+  }
 }

@@ -1,16 +1,25 @@
 import { useMemo } from 'react';
-import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ReviewsCarousel from '../../components/ReviewsCarousel';
 import PublicContentLoader from '../../components/PublicContentLoader';
+import SiteSeo from '../../components/SiteSeo';
 import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { usePublicService } from '../../lib/api/publicServices';
 import { selectServiceReviews, usePublicTestimonials } from '../../lib/api/publicTestimonials';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
 import { contactHrefForService } from '../../lib/serviceSlug';
 import ButtonArrow from '../../components/ButtonArrow';
+import {
+  absoluteMediaUrl,
+  absoluteUrl,
+  breadcrumbJsonLd,
+  getSiteName,
+  serviceJsonLd,
+  truncateMeta,
+} from '../../lib/seo';
+import { fetchPublicServiceBySlug } from '../../lib/seoPublicData.server';
 import styles from '../../styles/serviceDetail.module.css';
 
 function splitLongDescription(text) {
@@ -71,10 +80,12 @@ function CheckIcon() {
   );
 }
 
-export default function PublicServiceDetailPage() {
+export default function PublicServiceDetailPage({ initialService = null }) {
   const router = useRouter();
   const slug = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
-  const { data: service, isLoading, isError } = usePublicService(slug);
+  const { data: service, isLoading, isError } = usePublicService(slug, {
+    initialData: initialService || undefined,
+  });
   const { data: personalInfo } = usePersonalInfo();
   const { data: publicTestimonials = [], isLoading: reviewsLoading } = usePublicTestimonials();
 
@@ -118,23 +129,24 @@ export default function PublicServiceDetailPage() {
   const imageY = Number.isFinite(Number(service?.imagePosY)) ? Number(service.imagePosY) : 50;
   const serviceName = String(service?.name || '').trim();
   const shortDescription = String(service?.shortDescription || '').trim();
-  const pageTitle = serviceName
-    ? fullName
-      ? `${serviceName} | ${fullName}`
-      : serviceName
-    : 'Services';
+  const servicePath = `/services/${encodeURIComponent(String(service?.slug || slug || '').trim())}`;
+  const seoDescription = truncateMeta(shortDescription || service?.longDescription || '');
+  const siteName = getSiteName();
+  const providerName = fullName || siteName;
 
-  if (isLoading || !router.isReady) {
+  if ((isLoading && !initialService) || !router.isReady) {
     return (
       <main className={styles.page}>
+        <SiteSeo title="Services" path="/services" />
         <PublicContentLoader label="Loading service" />
       </main>
     );
   }
 
-  if (isError || !service) {
+  if ((isError && !service) || !service) {
     return (
       <main className={styles.page}>
+        <SiteSeo title="Service not found" path={servicePath} noindex />
         <div className={styles.missing}>
           <p className={styles.missingTitle}>This service could not be found.</p>
           <Link href="/services" className={styles.viewAll}>
@@ -148,13 +160,27 @@ export default function PublicServiceDetailPage() {
 
   return (
     <main className={styles.page}>
-      <Head>
-        <title>{pageTitle}</title>
-        {shortDescription ? <meta name="description" content={shortDescription} /> : null}
-        <meta property="og:title" content={pageTitle} />
-        {shortDescription ? <meta property="og:description" content={shortDescription} /> : null}
-        {service.image ? <meta property="og:image" content={service.image} /> : null}
-      </Head>
+      <SiteSeo
+        title={serviceName}
+        description={seoDescription}
+        path={servicePath}
+        image={service.image}
+        type="website"
+        keywords={[serviceName, 'service', 'coaching', siteName]}
+        jsonLd={[
+          serviceJsonLd({
+            name: serviceName,
+            description: seoDescription,
+            url: absoluteUrl(servicePath),
+            image: absoluteMediaUrl(service.image),
+            providerName,
+          }),
+          breadcrumbJsonLd([
+            { name: 'Services', url: absoluteUrl('/services') },
+            { name: serviceName, url: absoluteUrl(servicePath) },
+          ]),
+        ]}
+      />
 
       <section className={styles.hero} aria-label={serviceName || 'Service'}>
         <div className={styles.heroShell}>
@@ -285,4 +311,18 @@ export default function PublicServiceDetailPage() {
       </section>
     </main>
   );
+}
+
+export async function getServerSideProps(context) {
+  const slug = Array.isArray(context.params?.slug)
+    ? context.params.slug[0]
+    : context.params?.slug;
+  try {
+    const initialService = await fetchPublicServiceBySlug(slug);
+    if (!initialService) return { notFound: true };
+    return { props: { initialService } };
+  } catch (err) {
+    console.error('[seo] service slug fetch failed:', err?.message || err);
+    return { props: { initialService: null } };
+  }
 }

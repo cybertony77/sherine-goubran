@@ -6,6 +6,8 @@ import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { usePublicTestimonials } from '../../lib/api/publicTestimonials';
 import { firstNameFromFullName } from '../../lib/publicSite';
 import styles from '../../styles/reviews.module.css';
+import SiteSeo from '../../components/SiteSeo';
+import { PUBLIC_STATIC_SEO } from '../../lib/seo';
 
 export default function PublicReviewsPage() {
   const { data: testimonials = [], isLoading } = usePublicTestimonials();
@@ -19,6 +21,12 @@ export default function PublicReviewsPage() {
 
   return (
     <main className={styles.page}>
+      <SiteSeo
+        title={PUBLIC_STATIC_SEO['/reviews'].title}
+        description={PUBLIC_STATIC_SEO['/reviews'].description}
+        path="/reviews"
+        keywords={PUBLIC_STATIC_SEO['/reviews'].keywords}
+      />
       <header className={styles.head}>
         <p className={styles.eyebrow}>Reviews</p>
         <h1 className={styles.title}>What People Say</h1>

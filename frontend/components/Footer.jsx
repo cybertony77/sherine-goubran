@@ -17,7 +17,7 @@ const QUICK_LINKS = [
   { href: EVENTS_PUBLIC_PATH, label: 'Events & Workshops' },
   { href: '/blogs', label: 'Blogs' },
   { href: '/reviews', label: 'Reviews' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/contact', label: 'Contact Us' },
 ];
 
 function displayPhone(value) {

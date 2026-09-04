@@ -4,6 +4,8 @@ import PublicContentLoader from '../../components/PublicContentLoader';
 import { sortPublicBlogsOldestFirst } from '../../lib/blogDisplay';
 import { usePublicBlogs } from '../../lib/api/publicBlogs';
 import styles from '../../styles/publicBlogs.module.css';
+import SiteSeo from '../../components/SiteSeo';
+import { PUBLIC_STATIC_SEO } from '../../lib/seo';
 
 export default function PublicBlogsPage() {
   const { data: blogs = [], isLoading } = usePublicBlogs();
@@ -11,6 +13,12 @@ export default function PublicBlogsPage() {
 
   return (
     <main className={styles.page}>
+      <SiteSeo
+        title={PUBLIC_STATIC_SEO['/blogs'].title}
+        description={PUBLIC_STATIC_SEO['/blogs'].description}
+        path="/blogs"
+        keywords={PUBLIC_STATIC_SEO['/blogs'].keywords}
+      />
       <div className={styles.inner}>
         <header className={styles.head}>
           <p className={styles.eyebrow}>Insights & Stories</p>

@@ -22,7 +22,7 @@ const PREFIX_NAMES = [
   ['/leave-a-review', 'LEAVE A REVIEW'],
   ['/services', 'SERVICES'],
   ['/reviews', 'REVIEWS'],
-  ['/contact', 'CONTACT'],
+  ['/contact', 'CONTACT US'],
   ['/about', 'ABOUT'],
   ['/blogs', 'BLOGS'],
 ];

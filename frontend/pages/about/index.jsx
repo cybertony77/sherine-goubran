@@ -7,6 +7,8 @@ import PublicContentLoader from '../../components/PublicContentLoader';
 import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { mediaSrcFromKey } from '../../lib/personalInfoMedia';
 import styles from '../../styles/about.module.css';
+import SiteSeo from '../../components/SiteSeo';
+import { PUBLIC_STATIC_SEO } from '../../lib/seo';
 
 function displayRoleLabel(value) {
   return String(value || '')
@@ -59,6 +61,12 @@ export default function AboutPage() {
   if (isLoading) {
     return (
       <main className={styles.page}>
+        <SiteSeo
+          title={PUBLIC_STATIC_SEO['/about'].title}
+          description={PUBLIC_STATIC_SEO['/about'].description}
+          path="/about"
+          keywords={PUBLIC_STATIC_SEO['/about'].keywords}
+        />
         <PublicContentLoader label="Loading about" />
       </main>
     );
@@ -66,6 +74,13 @@ export default function AboutPage() {
 
   return (
     <main className={styles.page}>
+      <SiteSeo
+        title={storyTitle || PUBLIC_STATIC_SEO['/about'].title}
+        description={shortDesc || PUBLIC_STATIC_SEO['/about'].description}
+        path="/about"
+        image={aboutImage || '/logo.png'}
+        keywords={PUBLIC_STATIC_SEO['/about'].keywords}
+      />
       {showHero ? (
         <section className={styles.hero} aria-label={storyTitle}>
           <div className={styles.heroShell}>

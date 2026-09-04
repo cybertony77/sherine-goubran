@@ -6,6 +6,8 @@ import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { usePublicServices } from '../../lib/api/publicServices';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
 import styles from '../../styles/publicServices.module.css';
+import SiteSeo from '../../components/SiteSeo';
+import { PUBLIC_STATIC_SEO } from '../../lib/seo';
 
 export default function PublicServicesPage() {
   const { data: services = [], isLoading } = usePublicServices();
@@ -17,6 +19,12 @@ export default function PublicServicesPage() {
 
   return (
     <main className={styles.page}>
+      <SiteSeo
+        title={PUBLIC_STATIC_SEO['/services'].title}
+        description={PUBLIC_STATIC_SEO['/services'].description}
+        path="/services"
+        keywords={PUBLIC_STATIC_SEO['/services'].keywords}
+      />
       <div className={styles.inner}>
         <header className={styles.head}>
           <h1 className={styles.title}>Services</h1>

@@ -214,7 +214,7 @@ export default function UserMenu() {
     { href: '/events_&_workshops', label: 'Events & Workshops', icon: '/events.svg' },
     { href: '/reviews', label: 'Reviews', icon: '/testimonials2.svg' },
     { href: '/blogs', label: 'Blogs', icon: '/blogs.svg' },
-    { href: '/contact', label: 'Contact', icon: '/phone.svg' },
+    { href: '/contact', label: 'Contact Us', icon: '/phone.svg' },
   ];
 
   const drawerSize = isMobile ? '72%' : isTablet ? '62%' : '400px';

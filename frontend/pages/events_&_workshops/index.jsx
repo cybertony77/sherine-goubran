@@ -7,6 +7,9 @@ import PublicSelect from '../../components/PublicSelect';
 import { usePublicEvents } from '../../lib/api/publicEvents';
 import { filterPublicEvents, sortFilteredEvents } from '../../lib/eventDisplay';
 import styles from '../../styles/publicEvents.module.css';
+import SiteSeo from '../../components/SiteSeo';
+import { PUBLIC_STATIC_SEO } from '../../lib/seo';
+import { EVENTS_PUBLIC_PATH } from '../../lib/eventSlug';
 
 const TYPE_OPTIONS = [
   { value: 'all', label: 'All' },
@@ -70,6 +73,12 @@ export default function PublicEventsPage() {
 
   return (
     <main className={styles.page}>
+      <SiteSeo
+        title={PUBLIC_STATIC_SEO[EVENTS_PUBLIC_PATH].title}
+        description={PUBLIC_STATIC_SEO[EVENTS_PUBLIC_PATH].description}
+        path={EVENTS_PUBLIC_PATH}
+        keywords={PUBLIC_STATIC_SEO[EVENTS_PUBLIC_PATH].keywords}
+      />
       <div className={styles.inner}>
         <header className={styles.head}>
           <p className={styles.eyebrow}>Events & Workshops</p>

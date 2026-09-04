@@ -7,6 +7,8 @@ import { mediaSrcFromKey } from '../../lib/personalInfoMedia';
 import { firstNameFromFullName } from '../../lib/publicSite';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
 import styles from '../../styles/contact.module.css';
+import SiteSeo from '../../components/SiteSeo';
+import { PUBLIC_STATIC_SEO } from '../../lib/seo';
 
 function displayPhone(value) {
   const digits = formatPhoneForDB(value);
@@ -64,6 +66,12 @@ export default function ContactPage() {
   if (isLoading) {
     return (
       <main className={styles.page}>
+        <SiteSeo
+          title={PUBLIC_STATIC_SEO['/contact'].title}
+          description={PUBLIC_STATIC_SEO['/contact'].description}
+          path="/contact"
+          keywords={PUBLIC_STATIC_SEO['/contact'].keywords}
+        />
         <PublicContentLoader label="Loading contact" />
       </main>
     );
@@ -71,6 +79,13 @@ export default function ContactPage() {
 
   return (
     <main className={styles.page}>
+      <SiteSeo
+        title={PUBLIC_STATIC_SEO['/contact'].title}
+        description={contactText || PUBLIC_STATIC_SEO['/contact'].description}
+        path="/contact"
+        image={heroSrc || '/logo.png'}
+        keywords={PUBLIC_STATIC_SEO['/contact'].keywords}
+      />
       <header className={heroSrc ? styles.heroBanner : styles.hero}>
         {heroSrc ? (
           <div className={styles.heroMedia} aria-hidden="true">
@@ -80,7 +95,7 @@ export default function ContactPage() {
           </div>
         ) : null}
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>Contact</p>
+          <p className={styles.eyebrow}>Contact Us</p>
           <h1 className={styles.title}>Let's Connect</h1>
           <p className={styles.lead}>
             Have a question, booking inquiry or collaboration in mind? Get in touch and we&apos;ll

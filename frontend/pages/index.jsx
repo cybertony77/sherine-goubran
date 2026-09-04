@@ -20,6 +20,15 @@ import { loadHeroMediaOnce } from '../lib/heroMediaCache';
 import { mediaSrcFromKey, resolveHeroMediaFields } from '../lib/personalInfoMedia';
 import { firstNameFromFullName } from '../lib/publicSite';
 import styles from '../styles/index.module.css';
+import SiteSeo from '../components/SiteSeo';
+import {
+  absoluteUrl,
+  getSiteName,
+  getSiteOrigin,
+  organizationJsonLd,
+  PUBLIC_STATIC_SEO,
+  websiteJsonLd,
+} from '../lib/seo';
 
 function typingSequence(items) {
   const texts = (Array.isArray(items) ? items : [])
@@ -191,6 +200,21 @@ export default function HomePage() {
 
   return (
     <main className={styles.page}>
+      <SiteSeo
+        title={PUBLIC_STATIC_SEO['/'].title}
+        description={data?.short_desc || PUBLIC_STATIC_SEO['/'].description}
+        path="/"
+        image={imageSrc || '/logo.png'}
+        keywords={PUBLIC_STATIC_SEO['/'].keywords}
+        jsonLd={[
+          websiteJsonLd({ siteName: getSiteName(), origin: getSiteOrigin() }),
+          organizationJsonLd({
+            siteName: getSiteName(),
+            origin: getSiteOrigin(),
+            logoUrl: absoluteUrl('/logo.png'),
+          }),
+        ]}
+      />
       <section className={styles.hero} aria-label="Hero">
         <div className={styles.media}>
           {showImage ? (
@@ -201,7 +225,7 @@ export default function HomePage() {
               }`}
               style={mediaPosStyle}
               src={imageSrc}
-              alt=""
+              alt={data?.name || getSiteName() || 'Sherine Goubran'}
             />
           ) : null}
           {showVideo ? (

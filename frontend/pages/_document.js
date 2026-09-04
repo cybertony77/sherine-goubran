@@ -55,11 +55,6 @@ export default function MyDocument({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content={name} />
         <meta name="apple-touch-fullscreen" content="yes" />
-        <meta property="og:title" content={name} />
-        <meta property="og:description" content={name} />
-        <meta property="og:image" content="/icons/apple-icon-180.png" />
-        <meta property="og:type" content="website" />
-        <meta property="og:locale" content="en_US" />
 
         {/* Camera Permission Policy */}
         <meta httpEquiv="Permissions-Policy" content="camera=(self)" />

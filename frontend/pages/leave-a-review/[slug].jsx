@@ -5,6 +5,7 @@ import Link from 'next/link';
 import axios from 'axios';
 import { Group, Rating, Text } from '@mantine/core';
 import FullPageActionLoader from '../../components/FullPageActionLoader';
+import SiteSeo from '../../components/SiteSeo';
 import styles from '../../styles/leaveAReview.module.css';
 
 const RATING_COLOR = 'rgba(242, 207, 5, 1)';
@@ -99,8 +100,16 @@ export default function LeaveAReviewPage() {
   const posX = Number.isFinite(Number(page?.imagePosX)) ? Number(page.imagePosX) : 50;
   const posY = Number.isFinite(Number(page?.imagePosY)) ? Number(page.imagePosY) : 50;
 
+  const reviewPath = `/leave-a-review/${encodeURIComponent(String(slug || '').trim())}`;
+
   return (
     <div className={styles.page}>
+      <SiteSeo
+        title="Leave a Review"
+        description="Private review submission page."
+        path={reviewPath}
+        noindex
+      />
       <FullPageActionLoader
         active={loading || submitting}
         label={submitting ? 'Submitting' : 'Loading'}

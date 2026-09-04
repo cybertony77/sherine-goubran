@@ -1,15 +1,14 @@
 import { useEffect, useMemo } from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import PreviousEventDetail from '../../components/PreviousEventDetail';
 import UpcomingEventDetail from '../../components/UpcomingEventDetail';
 import ButtonArrow from '../../components/ButtonArrow';
 import PublicContentLoader from '../../components/PublicContentLoader';
+import SiteSeo from '../../components/SiteSeo';
 import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { usePublicEvent } from '../../lib/api/publicEvents';
 import { selectServiceReviews, usePublicTestimonials } from '../../lib/api/publicTestimonials';
-import { formatEventDate } from '../../lib/eventDate';
 import {
   eventHighlightRows,
   formatEventLocation,
@@ -18,12 +17,22 @@ import {
 } from '../../lib/eventDisplay';
 import { EVENTS_PUBLIC_PATH } from '../../lib/eventSlug';
 import { firstNameFromFullName } from '../../lib/publicSite';
+import {
+  absoluteMediaUrl,
+  absoluteUrl,
+  breadcrumbJsonLd,
+  eventJsonLd,
+  truncateMeta,
+} from '../../lib/seo';
+import { fetchPublicEventBySlug } from '../../lib/seoPublicData.server';
 import styles from '../../styles/eventDetail.module.css';
 
-export default function PublicEventDetailPage() {
+export default function PublicEventDetailPage({ initialEvent = null }) {
   const router = useRouter();
   const slug = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
-  const { data: event, isLoading, isError } = usePublicEvent(slug);
+  const { data: event, isLoading, isError } = usePublicEvent(slug, {
+    initialData: initialEvent || undefined,
+  });
   const { data: personalInfo } = usePersonalInfo();
   const { data: publicTestimonials = [], isLoading: reviewsLoading } = usePublicTestimonials();
 
@@ -79,23 +88,23 @@ export default function PublicEventDetailPage() {
   const imageY = Number.isFinite(Number(event?.imagePosY)) ? Number(event.imagePosY) : 50;
   const eventName = String(event?.name || '').trim();
   const shortDescription = String(event?.shortDescription || '').trim();
-  const pageTitle = eventName
-    ? firstName
-      ? `${eventName} | ${firstName}`
-      : eventName
-    : 'Events & Workshops';
+  const eventPath = `${EVENTS_PUBLIC_PATH}/${encodeURIComponent(String(event?.slug || slug || '').trim())}`;
+  const seoDescription = truncateMeta(shortDescription || event?.longDescription || '');
+  const locationLabel = formatEventLocation(event?.location);
 
-  if (isLoading || !router.isReady) {
+  if ((isLoading && !initialEvent) || !router.isReady) {
     return (
       <main className={styles.page}>
+        <SiteSeo title="Events & Workshops" path={EVENTS_PUBLIC_PATH} />
         <PublicContentLoader label="Loading event" />
       </main>
     );
   }
 
-  if (isError || !event) {
+  if ((isError && !event) || !event) {
     return (
       <main className={styles.page}>
+        <SiteSeo title="Event not found" path={eventPath} noindex />
         <div className={styles.missing}>
           <p className={styles.missingTitle}>This event could not be found.</p>
           <Link href={EVENTS_PUBLIC_PATH} className={styles.viewAll}>
@@ -109,13 +118,31 @@ export default function PublicEventDetailPage() {
 
   return (
     <main className={styles.page}>
-      <Head>
-        <title>{pageTitle}</title>
-        {shortDescription ? <meta name="description" content={shortDescription} /> : null}
-        <meta property="og:title" content={pageTitle} />
-        {shortDescription ? <meta property="og:description" content={shortDescription} /> : null}
-        {event.image ? <meta property="og:image" content={event.image} /> : null}
-      </Head>
+      <SiteSeo
+        title={eventName}
+        description={seoDescription}
+        path={eventPath}
+        image={event.image}
+        type="website"
+        keywords={[eventName, event.type, 'event', 'workshop', firstName].filter(Boolean)}
+        jsonLd={[
+          eventJsonLd({
+            name: eventName,
+            description: seoDescription,
+            url: absoluteUrl(eventPath),
+            image: absoluteMediaUrl(event.image),
+            startDate: event.date || undefined,
+            locationName: locationLabel || undefined,
+            eventStatus: isPrevious
+              ? 'https://schema.org/EventScheduled'
+              : 'https://schema.org/EventScheduled',
+          }),
+          breadcrumbJsonLd([
+            { name: 'Events & Workshops', url: absoluteUrl(EVENTS_PUBLIC_PATH) },
+            { name: eventName, url: absoluteUrl(eventPath) },
+          ]),
+        ]}
+      />
 
       {isUpcoming ? (
         <UpcomingEventDetail
@@ -145,4 +172,18 @@ export default function PublicEventDetailPage() {
       )}
     </main>
   );
+}
+
+export async function getServerSideProps(context) {
+  const slug = Array.isArray(context.params?.slug)
+    ? context.params.slug[0]
+    : context.params?.slug;
+  try {
+    const initialEvent = await fetchPublicEventBySlug(slug);
+    if (!initialEvent) return { notFound: true };
+    return { props: { initialEvent } };
+  } catch (err) {
+    console.error('[seo] event slug fetch failed:', err?.message || err);
+    return { props: { initialEvent: null } };
+  }
 }
