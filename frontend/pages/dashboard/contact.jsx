@@ -14,8 +14,6 @@ import styles from '../../styles/personal_info.module.css';
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-const RESPONSE_TEXT_MAX = 200;
-const CONTACT_TEXT_MAX = 200;
 
 function emptyForm() {
   return {
@@ -303,12 +301,6 @@ export default function DashboardContactPage() {
       const next = { ...prev, [key]: value };
       if (key === 'contact_location_name' && !String(value || '').trim()) {
         next.contact_location_link = '';
-      }
-      if (key === 'contact_response_text') {
-        next.contact_response_text = String(value ?? '').slice(0, RESPONSE_TEXT_MAX);
-      }
-      if (key === 'contact_text') {
-        next.contact_text = String(value ?? '').slice(0, CONTACT_TEXT_MAX);
       }
       return next;
     });
@@ -676,12 +668,8 @@ export default function DashboardContactPage() {
               value={form.contact_text}
               onChange={(e) => updateField('contact_text', e.target.value)}
               placeholder="Contact message or availability note…"
-              maxLength={CONTACT_TEXT_MAX}
               disabled={!canManage}
             />
-            <p className={styles.note}>
-              {String(form.contact_text || '').length}/{CONTACT_TEXT_MAX}
-            </p>
           </div>
 
           <div className={styles.field}>
@@ -695,9 +683,6 @@ export default function DashboardContactPage() {
               placeholder="e.g. I will contact you as soon as possible."
               disabled={!canManage}
             />
-            <p className={styles.note}>
-              {String(form.contact_response_text || '').length}/{RESPONSE_TEXT_MAX}
-            </p>
           </div>
         </Section>
 

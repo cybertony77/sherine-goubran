@@ -8,30 +8,25 @@ import { firstNameFromFullName } from '../../lib/publicSite';
 import styles from '../../styles/reviews.module.css';
 
 export default function PublicReviewsPage() {
-  const { data: testimonials = [], isLoading, isError } = usePublicTestimonials();
+  const { data: testimonials = [], isLoading } = usePublicTestimonials();
   const { data: personalInfo } = usePersonalInfo();
 
   const list = (Array.isArray(testimonials) ? testimonials : []).filter(
     (item) => String(item?.name || '').trim() && String(item?.text || '').trim()
   );
   const firstName = firstNameFromFullName(personalInfo?.name);
-  const contactLabel = firstName ? `Contact ${firstName}` : 'Get in touch';
-  const empty = !isLoading && (isError || !list.length);
+  const contactLabel = 'Contact Us';
 
   return (
     <main className={styles.page}>
       <header className={styles.head}>
         <p className={styles.eyebrow}>Reviews</p>
         <h1 className={styles.title}>What People Say</h1>
-        {empty ? (
-          <p className={styles.lead}>No reviews yet.</p>
-        ) : (
-          <p className={styles.lead}>
-            {firstName
-              ? `Real experiences from people who have worked with ${firstName}.`
-              : 'Real experiences from people who have taken meaningful steps toward growth and positive change.'}
-          </p>
-        )}
+        <p className={styles.lead}>
+          {firstName
+            ? `Real experiences from people who have worked with ${firstName}.`
+            : 'Real experiences from people who have taken meaningful steps toward growth and positive change.'}
+        </p>
       </header>
 
       {isLoading ? (
@@ -40,7 +35,15 @@ export default function PublicReviewsPage() {
         <section className={styles.marquee} aria-label="Client reviews">
           <ReviewsMarquee testimonials={list} />
         </section>
-      ) : null}
+      ) : (
+        <div className={styles.emptyWrap}>
+          <div className={styles.empty}>
+            <span className={styles.emptyLine} aria-hidden="true" />
+            <p className={styles.emptyTitle}>No reviews yet</p>
+            <p className={styles.emptyText}>Client stories will appear here soon.</p>
+          </div>
+        </div>
+      )}
 
       <section className={styles.cta} aria-label="Take the next step">
         <div className={styles.ctaInner}>

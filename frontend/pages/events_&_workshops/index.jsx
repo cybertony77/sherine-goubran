@@ -47,6 +47,27 @@ export default function PublicEventsPage() {
   const filtersClass =
     filteredEvents.length === 2 ? styles.filtersTwo : styles.filtersThree;
 
+  let emptyFilterTitle = 'No events or workshops found.';
+  if (typeFilter === 'event' && statusFilter === 'all') {
+    emptyFilterTitle = 'No events found.';
+  } else if (typeFilter === 'workshop' && statusFilter === 'all') {
+    emptyFilterTitle = 'No workshops found.';
+  } else if (typeFilter === 'event' && statusFilter === 'upcoming') {
+    emptyFilterTitle = 'No upcoming events found.';
+  } else if (typeFilter === 'event' && statusFilter === 'previous') {
+    emptyFilterTitle = 'No previous events found.';
+  } else if (typeFilter === 'workshop' && statusFilter === 'upcoming') {
+    emptyFilterTitle = 'No upcoming workshops found.';
+  } else if (typeFilter === 'workshop' && statusFilter === 'previous') {
+    emptyFilterTitle = 'No previous workshops found.';
+  } else if (typeFilter === 'all' && statusFilter === 'upcoming') {
+    emptyFilterTitle = 'No upcoming events or workshops found.';
+  } else if (typeFilter === 'all' && statusFilter === 'previous') {
+    emptyFilterTitle = 'No previous events or workshops found.';
+  }
+
+  const emptyFilterText = 'Try adjusting your filters.';
+
   return (
     <main className={styles.page}>
       <div className={styles.inner}>
@@ -93,10 +114,10 @@ export default function PublicEventsPage() {
                 ))}
               </div>
             ) : (
-              <div className={styles.empty}>
+              <div className={`${styles.empty} ${styles.emptyCentered}`}>
                 <span className={styles.emptyLine} aria-hidden="true" />
-                <p className={styles.emptyTitle}>No events or workshops found.</p>
-                <p className={styles.emptyText}>Try adjusting your filters.</p>
+                <p className={styles.emptyTitle}>{emptyFilterTitle}</p>
+                <p className={styles.emptyText}>{emptyFilterText}</p>
               </div>
             )}
           </div>

@@ -158,7 +158,6 @@ export default function PreviousEventDetail({
               <h2 id="past-highlights-title" className={styles.sectionTitleCenter}>
                 Event Highlights
               </h2>
-              <p className={styles.sectionLeadCenter}>A look at the impact of the experience.</p>
             </header>
             <div className={styles.centeredBlockWide}>
               <EventHighlights rows={highlightRows} />
@@ -197,7 +196,7 @@ export default function PreviousEventDetail({
               <h2 id="past-event-gallery-title" className={styles.sectionTitleCenter}>
                 Event Gallery
               </h2>
-              <p className={styles.sectionLeadCenter}>Moments from the experience.</p>
+              <p className={styles.sectionLeadCenter}>A glimpse into the experience.</p>
             </header>
             <EventGallery
               photos={galleryPhotos}

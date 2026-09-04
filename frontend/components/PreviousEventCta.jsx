@@ -3,20 +3,19 @@ import Link from 'next/link';
 import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
 import styles from '../styles/PreviousEventCta.module.css';
 
-export default function PreviousEventCta({ firstName = '' }) {
-  const contactLabel = firstName ? `Contact ${firstName}` : 'Get in touch';
-
+export default function PreviousEventCta() {
   return (
-    <section className={styles.cta} aria-label="Explore future events">
+    <section className={styles.cta} aria-label="Discover what's coming next">
       <div className={styles.ctaInner}>
-        <h2 className={styles.ctaTitle}>Ready for what&apos;s next?</h2>
+        <h2 className={styles.ctaTitle}>Discover what&apos;s coming next</h2>
         <p className={styles.ctaLead}>
-          Explore upcoming events and workshops, or get in touch if you&apos;d like to work together.
+          Explore upcoming events and workshops, or contact us to learn more about joining or
+          collaborating.
         </p>
         <div className={styles.ctaActions}>
-          <Link href="/contact" className={styles.btnPrimary} aria-label={contactLabel}>
+          <Link href="/contact" className={styles.btnPrimary} aria-label="Contact Us">
             <Image src="/phone.svg" alt="" width={18} height={18} />
-            {contactLabel}
+            Contact Us
           </Link>
           <Link
             href={`${EVENTS_PUBLIC_PATH}?status=upcoming`}

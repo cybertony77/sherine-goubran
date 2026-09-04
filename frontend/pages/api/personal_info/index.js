@@ -3,8 +3,6 @@ import { authMiddleware } from '../../../lib/authMiddleware';
 import { getMongoFromEnv } from '../../../lib/marketingPageMongo';
 import { buildStoredLinksPayload } from '../../../lib/linksClientUtils';
 import {
-  ensureR2CorsForBrowserUploads,
-  getR2Config,
   signR2GetUrl,
 } from '../../../lib/r2Server';
 
@@ -15,6 +13,8 @@ function defaultPersonalInfoDoc() {
     _id: PERSONAL_INFO_DOC_ID,
     name: '',
     hero_section_media: '',
+    hero_section_media_image: '',
+    hero_section_media_video: '',
     hero_mobile_position: { x: 50, y: 50 },
     typing_text: [],
     short_desc: '',
@@ -113,10 +113,32 @@ async function getOrCreateDoc(db) {
   return doc;
 }
 
+function isVideoMediaKey(key = '') {
+  return /\.(mp4|webm|ogg|ogv|mov|avi|mkv|m4v)$/i.test(String(key));
+}
+
+function resolveStoredHeroKeys(doc) {
+  let imageKey = String(doc?.hero_section_media_image || '').trim();
+  let videoKey = String(doc?.hero_section_media_video || '').trim();
+  const legacy = String(doc?.hero_section_media || '').trim();
+  if (!imageKey && !videoKey && legacy) {
+    if (isVideoMediaKey(legacy)) videoKey = legacy;
+    else imageKey = legacy;
+  }
+  return {
+    imageKey,
+    videoKey,
+    legacyKey: videoKey || imageKey || legacy || '',
+  };
+}
+
 function publicDoc(doc) {
+  const { imageKey, videoKey, legacyKey } = resolveStoredHeroKeys(doc);
   return {
     name: doc.name || '',
-    hero_section_media: doc.hero_section_media || '',
+    hero_section_media: legacyKey,
+    hero_section_media_image: imageKey,
+    hero_section_media_video: videoKey,
     hero_mobile_position: heroMobilePositionFrom(doc.hero_mobile_position),
     typing_text: Array.isArray(doc.typing_text) ? doc.typing_text : [],
     short_desc: doc.short_desc || '',
@@ -155,22 +177,32 @@ function publicDoc(doc) {
   };
 }
 
-async function withSignedHeroUrl(doc, origin = '') {
-  const payload = publicDoc(doc);
-  const key = String(payload.hero_section_media || '').trim();
-  let heroUrl = '';
-  if (key) {
-    try {
-      const cfg = getR2Config();
-      await ensureR2CorsForBrowserUploads(cfg, origin);
-      heroUrl = await signR2GetUrl(key);
-    } catch (err) {
-      console.warn('personal_info signed hero URL:', err?.message || err);
-    }
+async function signOptionalKey(key) {
+  const objectKey = String(key || '').trim();
+  if (!objectKey) return '';
+  try {
+    return await signR2GetUrl(objectKey);
+  } catch (err) {
+    console.warn('personal_info signed hero URL:', err?.message || err);
+    return '';
   }
+}
+
+async function withSignedHeroUrl(doc) {
+  const payload = publicDoc(doc);
+  const [imageUrl, videoUrl] = await Promise.all([
+    signOptionalKey(payload.hero_section_media_image),
+    signOptionalKey(payload.hero_section_media_video),
+  ]);
+
+  // Legacy single URL: prefer video when both exist (old clients treated media as one asset).
+  const legacyUrl = videoUrl || imageUrl || '';
+
   return {
     ...payload,
-    hero_section_media_url: heroUrl,
+    hero_section_media_image_url: imageUrl,
+    hero_section_media_video_url: videoUrl,
+    hero_section_media_url: legacyUrl,
   };
 }
 
@@ -194,7 +226,7 @@ export default async function handler(req, res) {
       }
 
       return res.status(200).json({
-        ...(await withSignedHeroUrl(doc, req.headers.origin || '')),
+        ...(await withSignedHeroUrl(doc)),
         canManage: manage,
       });
     }
@@ -216,8 +248,35 @@ export default async function handler(req, res) {
       const update = { updatedAt: new Date() };
 
       if (typeof body.name === 'string') update.name = body.name.trim();
-      if (typeof body.hero_section_media === 'string') {
-        update.hero_section_media = body.hero_section_media.trim();
+
+      const hasImageField = typeof body.hero_section_media_image === 'string';
+      const hasVideoField = typeof body.hero_section_media_video === 'string';
+      const hasLegacyField = typeof body.hero_section_media === 'string';
+
+      if (hasImageField || hasVideoField) {
+        const current = await db.collection('personal_info').findOne({ _id: PERSONAL_INFO_DOC_ID });
+        const resolvedImage = hasImageField
+          ? body.hero_section_media_image.trim()
+          : String(current?.hero_section_media_image || '').trim();
+        const resolvedVideo = hasVideoField
+          ? body.hero_section_media_video.trim()
+          : String(current?.hero_section_media_video || '').trim();
+        if (hasImageField) update.hero_section_media_image = resolvedImage;
+        if (hasVideoField) update.hero_section_media_video = resolvedVideo;
+        update.hero_section_media = resolvedVideo || resolvedImage || '';
+      } else if (hasLegacyField) {
+        const legacy = body.hero_section_media.trim();
+        update.hero_section_media = legacy;
+        if (legacy && isVideoMediaKey(legacy)) {
+          update.hero_section_media_video = legacy;
+          update.hero_section_media_image = '';
+        } else if (legacy) {
+          update.hero_section_media_image = legacy;
+          update.hero_section_media_video = '';
+        } else {
+          update.hero_section_media_image = '';
+          update.hero_section_media_video = '';
+        }
       }
       if (body.hero_mobile_position !== undefined) {
         update.hero_mobile_position = heroMobilePositionFrom(body.hero_mobile_position);
@@ -226,7 +285,7 @@ export default async function handler(req, res) {
         update.typing_text = normalizeTypingText(body.typing_text ?? body.typing_text_raw);
       }
       if (typeof body.short_desc === 'string') {
-        update.short_desc = body.short_desc.trim().slice(0, 200);
+        update.short_desc = body.short_desc.trim();
       }
       if ('years_of_experience' in body) {
         update.years_of_experience = toNullableNumber(body.years_of_experience);
@@ -245,7 +304,7 @@ export default async function handler(req, res) {
         update.about_image_position = heroMobilePositionFrom(body.about_image_position);
       }
       if (typeof body.about_text === 'string') {
-        update.about_text = body.about_text.trim().slice(0, 600);
+        update.about_text = body.about_text.trim();
       }
       if (body.journey !== undefined) {
         update.journey = normalizeTitleDescItems(body.journey);
@@ -266,7 +325,7 @@ export default async function handler(req, res) {
         update.contact_email = body.contact_email.trim();
       }
       if (typeof body.contact_text === 'string') {
-        update.contact_text = body.contact_text.trim().slice(0, 200);
+        update.contact_text = body.contact_text.trim();
       }
       if (typeof body.contact_hero_image === 'string') {
         update.contact_hero_image = body.contact_hero_image.trim();
@@ -293,7 +352,7 @@ export default async function handler(req, res) {
       const doc = await getOrCreateDoc(db);
       return res.status(200).json({
         success: true,
-        ...(await withSignedHeroUrl(doc, req.headers.origin || '')),
+        ...(await withSignedHeroUrl(doc)),
         canManage: true,
       });
     }

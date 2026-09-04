@@ -243,53 +243,59 @@ export default function DeleteAssistant() {
           }
           .confirm-modal {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.25);
+            inset: 0;
+            background: rgba(10, 30, 48, 0.55);
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 16px;
             z-index: 1000;
+            backdrop-filter: blur(4px);
           }
           .confirm-content {
-            background: #fff;
-            border-radius: 12px;
-            padding: 32px 24px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-            max-width: 400px;
-            width: 100%;
+            width: min(420px, 100%);
+            background: var(--system-surface, #fff);
+            border-radius: 18px;
+            padding: 24px 20px;
+            box-shadow: 0 24px 60px rgba(10, 30, 48, 0.28);
             text-align: center;
+          }
+          .confirm-content h3 {
+            margin: 0 0 10px;
+            color: var(--system-primary, #0f0f10);
+          }
+          .confirm-content p {
+            margin: 0 0 18px;
+            color: #8A8A8A;
+            line-height: 1.5;
           }
           .confirm-buttons {
             display: flex;
-            gap: 16px;
-            margin-top: 24px;
-            justify-content: center;
+            gap: 10px;
+          }
+          .confirm-reset-btn,
+          .cancel-btn {
+            flex: 1;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
           }
           .confirm-reset-btn {
             background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
-            color: #0F0F10;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
+            color: #fff;
           }
-          .confirm-reset-btn:disabled {
+          .confirm-reset-btn:disabled,
+          .cancel-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
           }
           .cancel-btn {
-            background: #adb5bd;
-            color: #0F0F10;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
+            background: #E9DDD0;
+            color: #2B2B2B;
           }
           .success-message {
             background: #d1fae5;
@@ -547,18 +553,19 @@ export default function DeleteAssistant() {
               </div>
             )}
             {showConfirm && assistant && !(currentUser && assistant.id === currentUser.assistant_id) && (
-              <div className="confirm-modal">
-                <div className="confirm-content">
-                  <h3>Confirm Delete</h3>
-                  <p>Are you sure you want to delete assistant <strong>{assistant?.name}</strong> (ID: {assistantId})?</p>
-                  <p><strong>This action cannot be undone!</strong></p>
+              <div className="confirm-modal" onClick={() => setShowConfirm(false)}>
+                <div className="confirm-content" onClick={(e) => e.stopPropagation()}>
+                  <h3>Delete assistant?</h3>
+                  <p>
+                    Are you sure you want to delete <strong>{assistant?.name}</strong>?
+                  </p>
                   <div className="confirm-buttons">
                     <button
                       onClick={deleteAssistant}
                       disabled={deleteAssistantMutation.isPending}
                       className="confirm-reset-btn"
                     >
-                      {deleteAssistantMutation.isPending ? "Deleting..." : "Yes, Delete Assistant"}
+                      {deleteAssistantMutation.isPending ? "Deleting…" : "Delete"}
                     </button>
                     <button
                       onClick={() => setShowConfirm(false)}

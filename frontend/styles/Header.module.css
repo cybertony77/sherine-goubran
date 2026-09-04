@@ -75,13 +75,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #e9c171;
-  font-family: 'Cormorant Garamond', 'Palatino Linotype', 'Times New Roman', serif;
-  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
-  font-weight: 500;
-  font-style: italic;
-  letter-spacing: 0.08em;
-  line-height: 1.15;
-  text-shadow: 0 2px 18px rgba(233, 193, 113, 0.22);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-shadow: none;
   padding: 2px 2px 0 0;
 }
 
@@ -111,7 +111,7 @@
   }
 
   .brandName {
-    font-size: clamp(1.2rem, 3.8vw, 1.5rem);
+    font-size: clamp(1.05rem, 3.2vw, 1.25rem);
   }
 }
 
@@ -135,7 +135,7 @@
   }
 
   .brandName {
-    font-size: 1.12rem;
-    letter-spacing: 0.05em;
+    font-size: 1rem;
+    letter-spacing: 0.03em;
   }
 }

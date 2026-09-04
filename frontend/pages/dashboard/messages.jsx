@@ -494,13 +494,13 @@ export default function DashboardMessagesPage() {
             if (e.target === e.currentTarget) setDeleteId(null);
           }}
         >
-          <div className={styles.confirmDialog} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.confirmContent} onClick={(e) => e.stopPropagation()}>
             <h3 id="delete-message-title">Delete message?</h3>
             <p>
               Are you sure you want to delete the message from{' '}
-              <strong>{deleteTarget?.name || 'this sender'}</strong>? This cannot be undone.
+              <strong>{deleteTarget?.name || 'this sender'}</strong>?
             </p>
-            <div className={styles.confirmActions}>
+            <div className={styles.confirmButtons}>
               <button
                 type="button"
                 className={styles.confirmDeleteBtn}

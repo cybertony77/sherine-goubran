@@ -11,8 +11,6 @@ import styles from '../styles/events_workshops.module.css';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-const SHORT_DESC_MAX = 250;
-const LONG_DESC_MAX = 550;
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 const TYPE_OPTIONS = ['Event', 'Workshop'];
 const STATE_OPTIONS = ['Upcoming', 'Previous'];
@@ -608,17 +606,13 @@ export default function EventForm({
           className={`${styles.textarea} ${styles.textareaShort}`}
           value={form.shortDescription}
           onChange={(e) => {
-            setForm((s) => ({ ...s, shortDescription: e.target.value.slice(0, SHORT_DESC_MAX) }));
+            setForm((s) => ({ ...s, shortDescription: e.target.value }));
             setFieldErrors((err) => ({ ...err, shortDescription: false }));
           }}
           placeholder="Brief summary"
           rows={3}
-          maxLength={SHORT_DESC_MAX}
           disabled={busy}
         />
-        <p className={styles.charCount}>
-          {String(form.shortDescription || '').length}/{SHORT_DESC_MAX}
-        </p>
       </div>
 
       <div
@@ -632,17 +626,13 @@ export default function EventForm({
           className={`${styles.textarea} ${styles.textareaLarge}`}
           value={form.longDescription}
           onChange={(e) => {
-            setForm((s) => ({ ...s, longDescription: e.target.value.slice(0, LONG_DESC_MAX) }));
+            setForm((s) => ({ ...s, longDescription: e.target.value }));
             setFieldErrors((err) => ({ ...err, longDescription: false }));
           }}
           placeholder="Full details"
           rows={8}
-          maxLength={LONG_DESC_MAX}
           disabled={busy}
         />
-        <p className={styles.charCount}>
-          {String(form.longDescription || '').length}/{LONG_DESC_MAX}
-        </p>
       </div>
 
       <div className={`${styles.formField} ${fieldErrors.date ? styles.fieldError : ''}`}>

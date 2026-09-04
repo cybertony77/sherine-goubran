@@ -5,14 +5,11 @@ import PublicContentLoader from '../../components/PublicContentLoader';
 import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { usePublicServices } from '../../lib/api/publicServices';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
-import { firstNameFromFullName } from '../../lib/publicSite';
 import styles from '../../styles/publicServices.module.css';
 
 export default function PublicServicesPage() {
   const { data: services = [], isLoading } = usePublicServices();
   const { data: personalInfo } = usePersonalInfo();
-  const firstName = firstNameFromFullName(personalInfo?.name);
-  const contactLabel = firstName ? `Contact ${firstName}` : 'Get in touch';
   const waDigits = formatPhoneForDB(personalInfo?.contact_phone || '');
   const waHref = waDigits.length > 2
     ? `https://wa.me/${waDigits}?text=${encodeURIComponent('I am asking about the services')}`
@@ -22,11 +19,10 @@ export default function PublicServicesPage() {
     <main className={styles.page}>
       <div className={styles.inner}>
         <header className={styles.head}>
-          <p className={styles.eyebrow}>What I offer</p>
           <h1 className={styles.title}>Services</h1>
           {!isLoading && services.length ? (
             <p className={styles.lead}>
-              Helping You Grow, Transform, and Move Forward
+              For different stages, needs and goals.
             </p>
           ) : null}
         </header>
@@ -58,9 +54,9 @@ export default function PublicServicesPage() {
             and where you want to go.
           </p>
           <div className={styles.ctaActions}>
-            <Link href="/contact" className={styles.btnPrimary} aria-label={contactLabel}>
+            <Link href="/contact" className={styles.btnPrimary} aria-label="Contact Us">
               <Image src="/phone.svg" alt="" width={18} height={18} />
-              {contactLabel}
+              Contact Us
             </Link>
             {waHref ? (
               <a

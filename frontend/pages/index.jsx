@@ -17,7 +17,7 @@ import { shuffleList, usePublicTestimonials } from '../lib/api/publicTestimonial
 import { selectHomepageEvents } from '../lib/eventDate';
 import { EVENTS_PUBLIC_PATH } from '../lib/eventSlug';
 import { loadHeroMediaOnce } from '../lib/heroMediaCache';
-import { isVideoMediaKey, mediaSrcFromKey } from '../lib/personalInfoMedia';
+import { mediaSrcFromKey, resolveHeroMediaFields } from '../lib/personalInfoMedia';
 import { firstNameFromFullName } from '../lib/publicSite';
 import styles from '../styles/index.module.css';
 
@@ -75,14 +75,19 @@ export default function HomePage() {
     [publicBlogs]
   );
   const videoRef = useRef(null);
-  const loadedKeyRef = useRef('');
-  const [mediaSrc, setMediaSrc] = useState('');
+  const loadedImageKeyRef = useRef('');
+  const loadedVideoKeyRef = useRef('');
+  const [imageSrc, setImageSrc] = useState('');
+  const [videoSrc, setVideoSrc] = useState('');
+  const [videoReady, setVideoReady] = useState(false);
 
   const name = String(data?.name || '').trim();
   const firstName = firstNameFromFullName(name);
   const shortDesc = String(data?.short_desc || '').trim();
-  const mediaKey = String(data?.hero_section_media || '').trim();
-  const isVideo = Boolean(mediaKey && isVideoMediaKey(mediaKey));
+  const { imageKey, videoKey, imageUrl, videoUrl } = useMemo(
+    () => resolveHeroMediaFields(data || {}),
+    [data]
+  );
   const sequence = useMemo(() => typingSequence(data?.typing_text), [data?.typing_text]);
   const aboutText = String(data?.about_text || '').trim();
   const aboutImage = mediaSrcFromKey(data?.about_image || '');
@@ -98,29 +103,61 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (!mediaKey) {
-      loadedKeyRef.current = '';
-      setMediaSrc('');
+    if (!imageKey) {
+      loadedImageKeyRef.current = '';
+      setImageSrc('');
       return undefined;
     }
-    if (loadedKeyRef.current === mediaKey) return undefined;
+    if (loadedImageKeyRef.current === imageKey) return undefined;
 
     let cancelled = false;
     (async () => {
       try {
-        const url = await loadHeroMediaOnce(mediaKey, data?.hero_section_media_url || '');
+        const url = await loadHeroMediaOnce(imageKey, imageUrl || '');
         if (cancelled || !url) return;
-        loadedKeyRef.current = mediaKey;
-        setMediaSrc(url);
+        loadedImageKeyRef.current = imageKey;
+        setImageSrc(url);
       } catch {
-        if (!cancelled) setMediaSrc('');
+        if (!cancelled) {
+          loadedImageKeyRef.current = '';
+          setImageSrc('');
+        }
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [mediaKey, data?.hero_section_media_url]);
+  }, [imageKey, imageUrl]);
+
+  useEffect(() => {
+    setVideoReady(false);
+    if (!videoKey) {
+      loadedVideoKeyRef.current = '';
+      setVideoSrc('');
+      return undefined;
+    }
+    if (loadedVideoKeyRef.current === videoKey) return undefined;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const url = await loadHeroMediaOnce(videoKey, videoUrl || '');
+        if (cancelled || !url) return;
+        loadedVideoKeyRef.current = videoKey;
+        setVideoSrc(url);
+      } catch {
+        if (!cancelled) {
+          loadedVideoKeyRef.current = '';
+          setVideoSrc('');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [videoKey, videoUrl]);
 
   const ensureMutedLoop = (el) => {
     if (!el) return;
@@ -138,36 +175,60 @@ export default function HomePage() {
     ensureMutedLoop(el);
   };
 
+  const handleVideoReady = (el) => {
+    ensureMutedLoop(el);
+    // Paint the video at opacity 0 first, then fade so the CSS transition runs.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setVideoReady(true);
+      });
+    });
+  };
+
+  const showImage = Boolean(imageSrc);
+  const showVideo = Boolean(videoSrc);
+  const showFallback = !showImage && !showVideo;
+
   return (
     <main className={styles.page}>
       <section className={styles.hero} aria-label="Hero">
         <div className={styles.media}>
-          {isVideo && mediaSrc ? (
+          {showImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className={`${styles.mediaEl} ${styles.mediaPoster} ${
+                showVideo && videoReady ? styles.mediaPosterHidden : ''
+              }`}
+              style={mediaPosStyle}
+              src={imageSrc}
+              alt=""
+            />
+          ) : null}
+          {showVideo ? (
             <video
               ref={videoRef}
-              className={styles.mediaEl}
+              className={`${styles.mediaEl} ${styles.mediaVideo} ${
+                videoReady ? styles.mediaVideoReady : ''
+              } ${!showImage ? styles.mediaVideoSolo : ''}`}
               style={mediaPosStyle}
               autoPlay
               muted
               loop
               playsInline
-              preload="auto"
+              preload="metadata"
               disablePictureInPicture
               controls={false}
-              onLoadedData={(e) => ensureMutedLoop(e.currentTarget)}
+              onLoadedData={(e) => handleVideoReady(e.currentTarget)}
+              onCanPlay={(e) => handleVideoReady(e.currentTarget)}
               onEnded={(e) => restartLoop(e.currentTarget)}
             >
               {/* Declare as video/mp4 first — covers .mov (QuickTime H.264) which
                   Chrome/Firefox refuse when served as video/quicktime */}
-              <source src={mediaSrc} type="video/mp4" />
-              <source src={mediaSrc} />
+              <source src={videoSrc} type="video/mp4" />
+              <source src={videoSrc} />
             </video>
-          ) : mediaSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className={styles.mediaEl} style={mediaPosStyle} src={mediaSrc} alt="" />
-          ) : (
-            <div className={styles.mediaFallback} />
-          )}
+          ) : null}
+          {showFallback ? <div className={styles.mediaFallback} /> : null}
           <div className={styles.scrim} />
           <div className={styles.vignette} />
         </div>
@@ -192,9 +253,9 @@ export default function HomePage() {
           {shortDesc ? <p className={styles.desc}>{shortDesc}</p> : null}
 
           <div className={styles.actions}>
-            <Link href="/contact" className={styles.btnPrimary}>
+            <Link href="/contact" className={styles.btnPrimary} aria-label="Contact Us">
               <Image src="/phone.svg" alt="" width={18} height={18} />
-              {firstName ? `Contact ${firstName}` : 'Get in touch'}
+              Contact Us
             </Link>
             <Link href="/services" className={styles.btnGhost}>
               <Image src="/services.svg" alt="" width={18} height={18} />
@@ -247,11 +308,10 @@ export default function HomePage() {
       <section className={styles.services} aria-label="Services">
         <div className={styles.servicesInner}>
           <header className={styles.servicesHead}>
-            <p className={styles.servicesEyebrow}>What I offer</p>
             <h2 className={styles.servicesTitle}>Services</h2>
             {previewServices.length ? (
               <p className={styles.servicesLead}>
-                Helping You Grow, Transform, and Move Forward
+                For different stages, needs and goals.
               </p>
             ) : null}
           </header>
@@ -401,9 +461,9 @@ export default function HomePage() {
             </p>
           </header>
           <div className={styles.contactActions}>
-            <Link href="/contact" className={styles.btnPrimary}>
+            <Link href="/contact" className={styles.btnPrimary} aria-label="Contact Us">
             <Image src="/phone.svg" alt="" width={18} height={18} />
-              {firstName ? `Contact ${firstName}` : 'Get in touch'}
+              Contact Us
             </Link>
             <Link href="/services" className={styles.btnGhost}>
               <Image src="/services.svg" alt="" width={18} height={18} />

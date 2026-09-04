@@ -286,23 +286,51 @@
   display: block;
 }
 
+.aboutImageSection {
+  /* Match public About page image frame (about.module.css .aboutImageWrap) */
+  --about-preview-h: clamp(500px, 44vw, 560px);
+  --about-preview-w: 600px;
+  width: 100%;
+  max-width: var(--about-preview-w);
+  margin: 0 auto;
+}
+
+.aboutImageField {
+  margin-bottom: 0;
+}
+
+.aboutTextField {
+  margin-bottom: 0;
+}
+
+.aboutTextarea {
+  width: 100%;
+  min-height: 220px;
+  height: 240px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
 .aboutUploadDone {
   width: 100%;
   max-width: 100%;
-  padding: 14px;
+  padding: 0;
   box-sizing: border-box;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .aboutPreviewFrame {
   position: relative;
   width: 100%;
+  height: var(--about-preview-h);
   border-radius: 24px;
   overflow: hidden;
   background: #1a1a1c;
   border: 1px solid rgba(201, 169, 106, 0.34);
-  box-shadow:
-    0 28px 56px rgba(0, 0, 0, 0.18),
-    0 0 48px rgba(201, 169, 106, 0.08);
+  box-shadow: none;
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -315,7 +343,7 @@
 .aboutPreviewImage {
   width: 100%;
   max-width: 100%;
-  height: clamp(320px, 42vw, 520px);
+  height: 100%;
   max-height: none;
   object-fit: cover;
   object-position: center 18%;
@@ -323,6 +351,13 @@
   display: block;
   pointer-events: none;
   user-select: none;
+}
+
+.aboutPosRow {
+  width: 100%;
+  max-width: 100%;
+  margin: 12px 0 0;
+  margin-left: 0;
 }
 
 .aboutDragHint {
@@ -341,7 +376,8 @@
 
 .aboutUploadZone {
   width: 100%;
-  min-height: 220px;
+  min-height: var(--about-preview-h);
+  height: var(--about-preview-h);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -349,6 +385,7 @@
   border-style: dashed;
   border-color: rgba(201, 169, 106, 0.4);
   background: linear-gradient(180deg, #ffffff 0%, #f8f4ec 100%);
+  box-sizing: border-box;
 }
 
 .aboutUploadPlus {
@@ -367,19 +404,6 @@
 .aboutActionsRow .btnDanger {
   flex: 1;
   min-width: 0;
-}
-
-.aboutSection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.aboutTextarea {
-  width: 100%;
-  min-height: 180px;
-  resize: vertical;
 }
 
 .contactHeroEditor {
@@ -908,6 +932,23 @@
   background: var(--system-surface) !important;
 }
 
+@media (max-width: 1100px) {
+  .aboutImageSection {
+    --about-preview-h: clamp(440px, 46vw, 520px);
+  }
+}
+
+@media (max-width: 900px) {
+  .aboutImageSection {
+    --about-preview-h: clamp(380px, 48vw, 480px);
+    --about-preview-w: min(100%, 520px);
+  }
+
+  .aboutPreviewFrame {
+    border-radius: 20px;
+  }
+}
+
 @media (max-width: 720px) {
   .page {
     padding: 14px 12px 36px;
@@ -979,22 +1020,40 @@
     max-height: none;
   }
 
+  .aboutImageSection {
+    --about-preview-h: clamp(320px, 68vw, 420px);
+    --about-preview-w: min(100%, 420px);
+  }
+
+  .aboutTextarea {
+    min-height: 180px;
+    height: 200px;
+  }
+
   .aboutUploadDone {
     max-width: 100%;
-    padding: 12px;
+    margin: 0;
+    padding: 0;
   }
 
   .aboutPreviewFrame {
     border-radius: 18px;
+    height: var(--about-preview-h);
   }
 
+  .aboutPreviewFrame .previewImage,
   .aboutPreviewImage {
-    height: clamp(260px, 68vw, 420px);
+    height: 100%;
   }
 
   .aboutUploadZone {
-    min-height: 180px;
+    min-height: var(--about-preview-h);
+    height: var(--about-preview-h);
     padding: 28px 16px;
+  }
+
+  .aboutPosRow {
+    width: 100%;
   }
 
   .aboutActionsRow {
@@ -1004,10 +1063,6 @@
   .aboutActionsRow .btnSecondary,
   .aboutActionsRow .btnDanger {
     width: 100%;
-  }
-
-  .aboutTextarea {
-    min-height: 160px;
   }
 
   .contactHeroPreviewWrap {
@@ -1087,6 +1142,15 @@
   .textarea {
     font-size: 16px; /* prevent iOS zoom */
     padding: 12px 12px;
+  }
+
+  .aboutImageSection {
+    --about-preview-h: clamp(280px, 78vw, 360px);
+    --about-preview-w: 100%;
+  }
+
+  .aboutPreviewFrame {
+    border-radius: 16px;
   }
 
   .btnPrimary {

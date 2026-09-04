@@ -83,7 +83,7 @@ export default function UpcomingEventDetail({
   const typeLabel = eventTypeLabel(event?.type);
   const stateLabel = eventStateLabel(event?.state);
 
-  const contactLabel = firstName ? `Contact ${firstName}` : 'Get in touch';
+  const contactLabel = 'Contact Us';
 
   const reserveMessage = eventReserveWhatsAppMessage({
     firstName,

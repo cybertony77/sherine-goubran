@@ -968,42 +968,37 @@ export default function PublicReviewsPage() {
         </div>
       ) : null}
 
-      {/* Delete confirm */}
-      {showConfirm ? (
+      {showConfirm && toDelete ? (
         <div
-          className={styles.formModal}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowConfirm(false);
-              setToDelete(null);
-            }
+          className={styles.confirmOverlay}
+          onClick={() => {
+            setShowConfirm(false);
+            setToDelete(null);
           }}
         >
           <div className={styles.confirmContent} onClick={(e) => e.stopPropagation()}>
-            <h3>Confirm Delete</h3>
+            <h3>Delete page?</h3>
             <p>
-              Delete public review page for <strong>{toDelete?.category}</strong>?
-            </p>
-            <p>
-              <strong>This action cannot be undone!</strong>
+              Are you sure you want to delete the public review page for{' '}
+              <strong>{toDelete.category}</strong>?
             </p>
             <div className={styles.confirmButtons}>
               <button
                 type="button"
                 className={styles.confirmDeleteBtn}
-                onClick={() => deleteMutation.mutate(toDelete.id)}
                 disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(toDelete.id)}
               >
-                {deleteMutation.isPending ? 'Deleting...' : 'Yes, Delete Page'}
+                {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
               </button>
               <button
                 type="button"
                 className={styles.confirmCancelBtn}
+                disabled={deleteMutation.isPending}
                 onClick={() => {
                   setShowConfirm(false);
                   setToDelete(null);
                 }}
-                disabled={deleteMutation.isPending}
               >
                 Cancel
               </button>

@@ -16,8 +16,8 @@ export default function PublicBlogsPage() {
           <p className={styles.eyebrow}>Insights & Stories</p>
           <h1 className={styles.title}>Blogs</h1>
           <p className={styles.lead}>
-            Explore insights, practical guidance, and inspiring ideas to support your personal
-            growth and everyday life.
+            Thoughts, experiences and practical ideas from Sherine on life, mindset, relationships,
+            wellbeing and everything in between.
           </p>
         </header>
 
@@ -36,8 +36,8 @@ export default function PublicBlogsPage() {
         ) : (
           <div className={styles.empty}>
             <span className={styles.emptyLine} aria-hidden="true" />
-            <p className={styles.emptyTitle}>Coming soon</p>
-            <p className={styles.emptyText}>New stories are being prepared.</p>
+            <p className={styles.emptyTitle}>Coming Soon</p>
+            <p className={styles.emptyText}>New articles are on the way.</p>
           </div>
         )}
       </div>

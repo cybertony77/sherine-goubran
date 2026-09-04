@@ -148,6 +148,11 @@
   border: 1px solid rgba(201, 169, 106, 0.28);
 }
 
+.emptyCentered {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .emptyLine {
   display: block;
   width: 36px;

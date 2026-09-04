@@ -223,10 +223,10 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               className={styles.waBtn}
-              aria-label={`Talk to ${firstName} on WhatsApp`}
+              aria-label="Let's Talk on WhatsApp"
             >
               <Image src="/whatsapp2.svg" alt="" width={18} height={18} />
-              Talk to {firstName}
+              Let&apos;s Talk
             </a>
           </div>
         ) : null}

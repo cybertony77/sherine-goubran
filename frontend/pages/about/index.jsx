@@ -6,7 +6,6 @@ import CertificatesSection from '../../components/CertificatesSection';
 import PublicContentLoader from '../../components/PublicContentLoader';
 import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { mediaSrcFromKey } from '../../lib/personalInfoMedia';
-import { formatPhoneForDB } from '../../lib/phoneUtils';
 import styles from '../../styles/about.module.css';
 
 function displayRoleLabel(value) {
@@ -41,15 +40,6 @@ export default function AboutPage() {
   const storyTitle = firstName ? `${firstName}'s Story` : 'Story';
   const shortDesc = String(personalInfo?.short_desc || '').trim();
   const aboutImage = mediaSrcFromKey(personalInfo?.about_image || '');
-  const waDigits = formatPhoneForDB(personalInfo?.contact_phone || '');
-  const waHref =
-    waDigits.length > 2
-      ? `https://wa.me/${waDigits}?text=${encodeURIComponent(
-          firstName
-            ? `Hi ${firstName}, I'd like to ask a question.`
-            : "Hi, I'd like to ask a question."
-        )}`
-      : '';
   const sequence = useMemo(
     () => typingSequence(personalInfo?.typing_text),
     [personalInfo?.typing_text]
@@ -82,45 +72,8 @@ export default function AboutPage() {
             <header className={styles.heroLabel}>
               <p className={styles.eyebrow}>About</p>
             </header>
-            <div className={styles.heroInner}>
-              <div className={styles.heroCopy}>
-                <h1 className={styles.heroTitle}>{storyTitle}</h1>
-                {sequence.length ? (
-                  <div className={styles.typingWrap}>
-                    <TypeAnimation
-                      key={sequence.filter((x) => typeof x === 'string').join('|')}
-                      sequence={sequence}
-                      wrapper="span"
-                      speed={45}
-                      deletionSpeed={35}
-                      repeat={Infinity}
-                      className={styles.typing}
-                      style={{ color: '#e9c171' }}
-                    />
-                  </div>
-                ) : null}
-                {shortDesc ? <p className={styles.heroLead}>{shortDesc}</p> : null}
-                {waHref ? (
-                  <div className={styles.heroActions}>
-                    <a
-                      href={waHref}
-                      className={styles.btnGhost}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label="Ask a Question on WhatsApp"
-                    >
-                      <Image
-                        src="/whatsapp2.svg"
-                        alt=""
-                        width={18}
-                        height={18}
-                        className={styles.waIcon}
-                      />
-                      Ask a Question
-                    </a>
-                  </div>
-                ) : null}
-              </div>
+            <div className={`${styles.heroInner} ${aboutImage ? '' : styles.heroInnerSolo}`}>
+              <h1 className={styles.heroTitle}>{storyTitle}</h1>
               {aboutImage ? (
                 <div className={styles.aboutImageWrap}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -137,6 +90,23 @@ export default function AboutPage() {
                   />
                 </div>
               ) : null}
+              <div className={styles.heroCopy}>
+                {sequence.length ? (
+                  <div className={styles.typingWrap}>
+                    <TypeAnimation
+                      key={sequence.filter((x) => typeof x === 'string').join('|')}
+                      sequence={sequence}
+                      wrapper="span"
+                      speed={45}
+                      deletionSpeed={35}
+                      repeat={Infinity}
+                      className={styles.typing}
+                      style={{ color: '#e9c171' }}
+                    />
+                  </div>
+                ) : null}
+                {shortDesc ? <p className={styles.heroLead}>{shortDesc}</p> : null}
+              </div>
             </div>
           </div>
         </section>
@@ -193,7 +163,7 @@ export default function AboutPage() {
             <header className={styles.experienceHead}>
               <p className={styles.sectionEyebrow}>Professional experience</p>
               <h2 className={styles.experienceTitle}>Professional Experience</h2>
-              <p className={styles.experienceLead}>What I do professionally</p>
+              <p className={styles.experienceLead}>Experience across coaching, business and fitness.</p>
             </header>
             <ol className={styles.experienceList}>
               {experience.map((row, i) => (
@@ -216,22 +186,17 @@ export default function AboutPage() {
         <CertificatesSection />
       </div>
 
-      <section className={`${styles.section} ${styles.cta}`} aria-label="Begin your journey">
+      <section className={`${styles.section} ${styles.cta}`} aria-label="Let's connect">
         <div className={styles.ctaInner}>
-          <h2 className={styles.ctaTitle}>
-            Ready to begin your
-            <br />
-            journey?
-          </h2>
+          <h2 className={styles.ctaTitle}>Let&apos;s Connect</h2>
           <p className={styles.ctaLead}>
-            {firstName
-              ? `If this story resonates with you, ${firstName} would be honoured to walk the next step with you.`
-              : 'If this story resonates with you, I would be honoured to walk the next step with you.'}
+            Whether you&apos;re interested in coaching, speaking, workshops or connecting with
+            Sherine in another way, we&apos;d love to hear from you.
           </p>
           <div className={styles.ctaActions}>
-            <Link href="/contact" className={styles.btnPrimary} aria-label={firstName ? `Contact ${firstName}` : 'Get in touch'}>
+            <Link href="/contact" className={styles.btnPrimary} aria-label="Contact Us">
               <Image src="/phone.svg" alt="" width={18} height={18} />
-              {firstName ? `Contact ${firstName}` : 'Get in touch'}
+              Contact Us
             </Link>
             <Link href="/services" className={styles.btnGhost} aria-label="Explore Services">
               <Image src="/services.svg" alt="" width={18} height={18} />

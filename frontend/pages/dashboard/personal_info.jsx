@@ -16,13 +16,13 @@ import {
 } from '../../lib/linksClientUtils';
 import { personalInfoKeys } from '../../lib/api/personalInfo';
 import { resetHeroMediaCache } from '../../lib/heroMediaCache';
+import { resolveHeroMediaFields } from '../../lib/personalInfoMedia';
 import styles from '../../styles/personal_info.module.css';
 import linkStyles from '../../styles/links.module.css';
 
 const MAX_HERO_BYTES = 4 * 1024 * 1024 * 1024; // 4 GB
+const MAX_HERO_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_ABOUT_IMAGE_BYTES = 20 * 1024 * 1024;
-const SHORT_DESC_MAX = 200;
-const ABOUT_TEXT_MAX = 600;
 const ITEM_TITLE_MAX = 80;
 const ITEM_DESC_MAX = 200;
 const QUOTE_MAX = 300;
@@ -40,7 +40,8 @@ const VIDEO_TYPES = [
 function emptyForm() {
   return {
     name: '',
-    hero_section_media: '',
+    hero_section_media_image: '',
+    hero_section_media_video: '',
     hero_mobile_position: { x: 50, y: 50 },
     typing_text_raw: '',
     short_desc: '',
@@ -82,10 +83,6 @@ function coverExtra(imgW, imgH, boxW, boxH) {
 
 function isVideoKey(key = '') {
   return /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(key);
-}
-
-function heroMediaKind(key = '') {
-  return isVideoKey(key) ? 'video' : 'image';
 }
 
 function mediaSrcFromKey(key) {
@@ -135,18 +132,15 @@ function validateTitleDescRows(rows, prefix) {
 function validatePersonalInfoForm(form) {
   const fields = [];
 
-  if (!form.hero_section_media) fields.push('hero_section_media');
   if (!String(form.name || '').trim()) fields.push('name');
   if (!String(form.typing_text_raw || '').trim()) fields.push('typing_text_raw');
   if (!String(form.short_desc || '').trim()) fields.push('short_desc');
-  if (String(form.short_desc || '').length > SHORT_DESC_MAX) fields.push('short_desc');
   if (!isFilledNumber(form.years_of_experience)) fields.push('years_of_experience');
   if (!isFilledNumber(form.people_trained)) fields.push('people_trained');
   if (!isFilledNumber(form.professional_certificates)) fields.push('professional_certificates');
   if (!isFilledNumber(form.events_and_workshops)) fields.push('events_and_workshops');
   if (!form.about_image) fields.push('about_image');
   if (!String(form.about_text || '').trim()) fields.push('about_text');
-  if (String(form.about_text || '').length > ABOUT_TEXT_MAX) fields.push('about_text');
 
   fields.push(...validateTitleDescRows(form.journey, 'journey'));
   fields.push(...validateTitleDescRows(form.professional_roles, 'experience'));
@@ -362,10 +356,12 @@ function docToForm(doc) {
   const links = Array.isArray(doc?.links) && doc.links.length
     ? doc.links.map(parseStoredLinkForEdit)
     : [];
+  const { imageKey, videoKey } = resolveHeroMediaFields(doc || {});
 
   return {
     name: doc?.name || '',
-    hero_section_media: doc?.hero_section_media || '',
+    hero_section_media_image: imageKey,
+    hero_section_media_video: videoKey,
     hero_mobile_position: normalizeHeroMobilePosition(doc?.hero_mobile_position),
     typing_text_raw: Array.isArray(doc?.typing_text) ? doc.typing_text.join(', ') : '',
     short_desc: doc?.short_desc || '',
@@ -515,7 +511,8 @@ function TitleDescListEditor({
 export default function PersonalInfoPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const heroInputRef = useRef(null);
+  const heroImageInputRef = useRef(null);
+  const heroVideoInputRef = useRef(null);
   const aboutInputRef = useRef(null);
   const aboutDragRef = useRef(null);
   const aboutDragState = useRef(null);
@@ -539,7 +536,14 @@ export default function PersonalInfoPage() {
     [fieldErrors]
   );
 
-  const [heroUpload, setHeroUpload] = useState({
+  const [heroImageUpload, setHeroImageUpload] = useState({
+    status: 'idle',
+    progress: 0,
+    phase: 'idle',
+    fileName: '',
+    error: '',
+  });
+  const [heroVideoUpload, setHeroVideoUpload] = useState({
     status: 'idle',
     progress: 0,
     phase: 'idle',
@@ -555,9 +559,13 @@ export default function PersonalInfoPage() {
   });
   const [heroTab, setHeroTab] = useState('image');
 
-  const heroPreview = useMemo(
-    () => mediaSrcFromKey(form.hero_section_media),
-    [form.hero_section_media]
+  const heroImagePreview = useMemo(
+    () => mediaSrcFromKey(form.hero_section_media_image),
+    [form.hero_section_media_image]
+  );
+  const heroVideoPreview = useMemo(
+    () => mediaSrcFromKey(form.hero_section_media_video),
+    [form.hero_section_media_video]
   );
   const aboutPreview = useMemo(
     () => mediaSrcFromKey(form.about_image),
@@ -566,13 +574,20 @@ export default function PersonalInfoPage() {
 
   const canSave = useMemo(() => {
     if (!canManage || saving) return false;
-    if (heroUpload.status === 'uploading' || aboutUpload.status === 'uploading') return false;
+    if (
+      heroImageUpload.status === 'uploading' ||
+      heroVideoUpload.status === 'uploading' ||
+      aboutUpload.status === 'uploading'
+    ) {
+      return false;
+    }
     if (!validatePersonalInfoForm(form).ok) return false;
     return JSON.stringify(form) !== JSON.stringify(snapshot);
   }, [
     canManage,
     saving,
-    heroUpload.status,
+    heroImageUpload.status,
+    heroVideoUpload.status,
     aboutUpload.status,
     form,
     snapshot,
@@ -601,17 +616,27 @@ export default function PersonalInfoPage() {
       setForm(next);
       setSnapshot(next);
       setCanManage(Boolean(data.canManage));
-      if (data.hero_section_media) {
-        setHeroTab(heroMediaKind(data.hero_section_media));
-        setHeroUpload({
+      if (next.hero_section_media_image) {
+        setHeroImageUpload({
           status: 'done',
           progress: 100,
           phase: 'done',
-          fileName: String(data.hero_section_media).split('/').pop() || 'media',
+          fileName: String(next.hero_section_media_image).split('/').pop() || 'image',
           error: '',
         });
       } else {
-        setHeroTab('image');
+        setHeroImageUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
+      }
+      if (next.hero_section_media_video) {
+        setHeroVideoUpload({
+          status: 'done',
+          progress: 100,
+          phase: 'done',
+          fileName: String(next.hero_section_media_video).split('/').pop() || 'video',
+          error: '',
+        });
+      } else {
+        setHeroVideoUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
       }
       if (data.about_image) {
         setAboutUpload({
@@ -634,10 +659,7 @@ export default function PersonalInfoPage() {
   }, [loadData]);
 
   const updateField = (key, value) => {
-    let next = value;
-    if (key === 'short_desc') next = String(value ?? '').slice(0, SHORT_DESC_MAX);
-    if (key === 'about_text') next = String(value ?? '').slice(0, ABOUT_TEXT_MAX);
-    setForm((prev) => ({ ...prev, [key]: next }));
+    setForm((prev) => ({ ...prev, [key]: value }));
     setFieldErrors((prev) => prev.filter((f) => f !== key && !String(f).startsWith('link_')));
     if (key === 'links') setLinksError('');
   };
@@ -691,43 +713,29 @@ export default function PersonalInfoPage() {
     return key;
   };
 
-  const switchHeroTab = (tab) => {
-    if (heroUpload.status === 'uploading' || tab === heroTab) return;
-    setHeroTab(tab);
-    if (heroInputRef.current) heroInputRef.current.value = '';
-  };
-
-  const handleHeroSelect = async (e) => {
+  const handleHeroImageSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowed = heroTab === 'video' ? VIDEO_TYPES : IMAGE_TYPES;
-    const isAllowed =
-      allowed.includes(file.type) ||
-      (heroTab === 'image' && file.type.startsWith('image/')) ||
-      (heroTab === 'video' && file.type.startsWith('video/'));
-
+    const isAllowed = IMAGE_TYPES.includes(file.type) || file.type.startsWith('image/');
     if (!isAllowed) {
-      setHeroUpload((s) => ({
+      setHeroImageUpload((s) => ({
         ...s,
         status: 'error',
-        error:
-          heroTab === 'video'
-            ? 'Invalid file type. Upload a video (MP4, WebM, OGG, MOV, AVI, MKV).'
-            : 'Invalid file type. Upload an image (JPEG, PNG, GIF, WEBP).',
+        error: 'Invalid file type. Upload an image (JPEG, PNG, GIF, WEBP).',
       }));
       return;
     }
-    if (file.size > MAX_HERO_BYTES) {
-      setHeroUpload((s) => ({
+    if (file.size > MAX_HERO_IMAGE_BYTES) {
+      setHeroImageUpload((s) => ({
         ...s,
         status: 'error',
-        error: 'File size exceeds 4 GB limit.',
+        error: 'Image size exceeds 20 MB limit.',
       }));
       return;
     }
 
-    setHeroUpload({
+    setHeroImageUpload({
       status: 'uploading',
       progress: 0,
       phase: 'sending',
@@ -737,12 +745,12 @@ export default function PersonalInfoPage() {
 
     try {
       const key = await uploadToR2(file, {
-        onProgress: (p) => setHeroUpload((s) => ({ ...s, progress: p })),
-        onPhase: (phase) => setHeroUpload((s) => ({ ...s, phase })),
+        onProgress: (p) => setHeroImageUpload((s) => ({ ...s, progress: p })),
+        onPhase: (phase) => setHeroImageUpload((s) => ({ ...s, phase })),
       });
-      updateField('hero_section_media', key);
+      updateField('hero_section_media_image', key);
       updateField('hero_mobile_position', { x: 50, y: 50 });
-      setHeroUpload({
+      setHeroImageUpload({
         status: 'done',
         progress: 100,
         phase: 'done',
@@ -751,16 +759,74 @@ export default function PersonalInfoPage() {
       });
     } catch (err) {
       if (err.message === 'Upload cancelled') {
-        setHeroUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
+        setHeroImageUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
       } else {
-        setHeroUpload((s) => ({
+        setHeroImageUpload((s) => ({
           ...s,
           status: 'error',
           error: err.message || 'Upload failed',
         }));
       }
     } finally {
-      if (heroInputRef.current) heroInputRef.current.value = '';
+      if (heroImageInputRef.current) heroImageInputRef.current.value = '';
+    }
+  };
+
+  const handleHeroVideoSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isAllowed = VIDEO_TYPES.includes(file.type) || file.type.startsWith('video/');
+    if (!isAllowed) {
+      setHeroVideoUpload((s) => ({
+        ...s,
+        status: 'error',
+        error: 'Invalid file type. Upload a video (MP4, WebM, OGG, MOV, AVI, MKV).',
+      }));
+      return;
+    }
+    if (file.size > MAX_HERO_BYTES) {
+      setHeroVideoUpload((s) => ({
+        ...s,
+        status: 'error',
+        error: 'File size exceeds 4 GB limit.',
+      }));
+      return;
+    }
+
+    setHeroVideoUpload({
+      status: 'uploading',
+      progress: 0,
+      phase: 'sending',
+      fileName: file.name,
+      error: '',
+    });
+
+    try {
+      const key = await uploadToR2(file, {
+        onProgress: (p) => setHeroVideoUpload((s) => ({ ...s, progress: p })),
+        onPhase: (phase) => setHeroVideoUpload((s) => ({ ...s, phase })),
+      });
+      updateField('hero_section_media_video', key);
+      setHeroVideoUpload({
+        status: 'done',
+        progress: 100,
+        phase: 'done',
+        fileName: file.name,
+        error: '',
+      });
+    } catch (err) {
+      if (err.message === 'Upload cancelled') {
+        setHeroVideoUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
+      } else {
+        setHeroVideoUpload((s) => ({
+          ...s,
+          status: 'error',
+          error: err.message || 'Upload failed',
+        }));
+      }
+    } finally {
+      if (heroVideoInputRef.current) heroVideoInputRef.current.value = '';
     }
   };
 
@@ -829,10 +895,15 @@ export default function PersonalInfoPage() {
     }
   };
 
-  const clearHero = () => {
-    updateField('hero_section_media', '');
+  const clearHeroImage = () => {
+    updateField('hero_section_media_image', '');
     updateField('hero_mobile_position', { x: 50, y: 50 });
-    setHeroUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
+    setHeroImageUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
+  };
+
+  const clearHeroVideo = () => {
+    updateField('hero_section_media_video', '');
+    setHeroVideoUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
   };
 
   const clearAbout = () => {
@@ -879,18 +950,27 @@ export default function PersonalInfoPage() {
     setLinkFormOpen(false);
     setLinkEditIndex(null);
     setLinkDeleteIndex(null);
-    if (snapshot.hero_section_media) {
-      setHeroTab(heroMediaKind(snapshot.hero_section_media));
-      setHeroUpload({
+    if (snapshot.hero_section_media_image) {
+      setHeroImageUpload({
         status: 'done',
         progress: 100,
         phase: 'done',
-        fileName: String(snapshot.hero_section_media).split('/').pop() || 'media',
+        fileName: String(snapshot.hero_section_media_image).split('/').pop() || 'image',
         error: '',
       });
     } else {
-      setHeroTab('image');
-      setHeroUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
+      setHeroImageUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
+    }
+    if (snapshot.hero_section_media_video) {
+      setHeroVideoUpload({
+        status: 'done',
+        progress: 100,
+        phase: 'done',
+        fileName: String(snapshot.hero_section_media_video).split('/').pop() || 'video',
+        error: '',
+      });
+    } else {
+      setHeroVideoUpload({ status: 'idle', progress: 0, phase: 'idle', fileName: '', error: '' });
     }
     if (snapshot.about_image) {
       setAboutUpload({
@@ -980,7 +1060,8 @@ export default function PersonalInfoPage() {
     try {
       const payload = {
         name: form.name,
-        hero_section_media: form.hero_section_media,
+        hero_section_media_image: form.hero_section_media_image,
+        hero_section_media_video: form.hero_section_media_video,
         hero_mobile_position: normalizeHeroMobilePosition(form.hero_mobile_position),
         typing_text: form.typing_text_raw,
         short_desc: form.short_desc,
@@ -1001,7 +1082,9 @@ export default function PersonalInfoPage() {
 
       const { data } = await apiClient.put('/api/personal_info', payload);
       const next = docToForm(data);
-      const mediaChanged = snapshot.hero_section_media !== next.hero_section_media;
+      const mediaChanged =
+        snapshot.hero_section_media_image !== next.hero_section_media_image ||
+        snapshot.hero_section_media_video !== next.hero_section_media_video;
       setForm(next);
       setSnapshot(next);
       queryClient.invalidateQueries({ queryKey: personalInfoKeys.all });
@@ -1040,18 +1123,23 @@ export default function PersonalInfoPage() {
 
         <Section title="Hero media">
           <div className={styles.field}>
-            <label>
-              Hero media <RequiredMark />
-            </label>
-            <p className={styles.note}>Use an image or a video — not both.</p>
+            <label>Hero media</label>
+            <p className={styles.note}>
+              Image and video are both optional. You can set either, both, or neither. If both are
+              set, the homepage shows the image first, then fades to the video when it is ready.
+            </p>
             <div className={styles.heroTabs} role="tablist" aria-label="Hero media type">
               <button
                 type="button"
                 role="tab"
                 className={`${styles.heroTab} ${heroTab === 'image' ? styles.heroTabActive : ''}`}
                 aria-selected={heroTab === 'image'}
-                disabled={!canManage || heroUpload.status === 'uploading'}
-                onClick={() => switchHeroTab('image')}
+                disabled={
+                  !canManage ||
+                  heroImageUpload.status === 'uploading' ||
+                  heroVideoUpload.status === 'uploading'
+                }
+                onClick={() => setHeroTab('image')}
               >
                 Images
               </button>
@@ -1060,138 +1148,196 @@ export default function PersonalInfoPage() {
                 role="tab"
                 className={`${styles.heroTab} ${heroTab === 'video' ? styles.heroTabActive : ''}`}
                 aria-selected={heroTab === 'video'}
-                disabled={!canManage || heroUpload.status === 'uploading'}
-                onClick={() => switchHeroTab('video')}
+                disabled={
+                  !canManage ||
+                  heroImageUpload.status === 'uploading' ||
+                  heroVideoUpload.status === 'uploading'
+                }
+                onClick={() => setHeroTab('video')}
               >
                 Videos
               </button>
             </div>
+
             <input
-              ref={heroInputRef}
+              ref={heroImageInputRef}
               type="file"
-              accept={
-                heroTab === 'video'
-                  ? 'video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska'
-                  : 'image/jpeg,image/png,image/gif,image/webp'
-              }
+              accept="image/jpeg,image/png,image/gif,image/webp"
               style={{ display: 'none' }}
-              onChange={handleHeroSelect}
-              disabled={!canManage || heroUpload.status === 'uploading'}
+              onChange={handleHeroImageSelect}
+              disabled={!canManage || heroImageUpload.status === 'uploading'}
+            />
+            <input
+              ref={heroVideoInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
+              style={{ display: 'none' }}
+              onChange={handleHeroVideoSelect}
+              disabled={!canManage || heroVideoUpload.status === 'uploading'}
             />
 
-            {form.hero_section_media &&
-            heroMediaKind(form.hero_section_media) !== heroTab &&
-            heroUpload.status !== 'uploading' ? (
-              <p className={styles.note}>
-                {heroTab === 'video'
-                  ? 'An image is currently used as hero media. Upload a video here to replace it.'
-                  : 'A video is currently used as hero media. Upload an image here to replace it.'}
-              </p>
-            ) : null}
-
-            {(heroUpload.status === 'idle' || heroUpload.status === 'error') &&
-              (!form.hero_section_media ||
-                heroMediaKind(form.hero_section_media) !== heroTab) && (
-              <div
-                className={`${styles.uploadZone} ${hasFieldError('hero_section_media') ? styles.uploadZoneError : ''}`}
-                onClick={() => canManage && heroInputRef.current?.click()}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') heroInputRef.current?.click();
-                }}
-              >
-                <div style={{ fontSize: '2rem', color: '#9aabb8' }}>+</div>
-                <div className={styles.uploadZoneTitle}>
-                  {heroTab === 'video' ? 'Click to select a video' : 'Click to select an image'}
-                </div>
-                <div className={styles.uploadZoneHint}>
-                  {heroTab === 'video'
-                    ? 'MP4, WebM, OGG, MOV, AVI, MKV · Up to 4 GB'
-                    : 'JPEG, PNG, GIF, WEBP · Max 20 MB'}
-                </div>
-              </div>
-            )}
-
-            {heroUpload.status === 'uploading' && (
-              <div className={styles.uploadProgress}>
-                <div className={styles.progressMeta}>
-                  <span>
-                    {heroUpload.phase === 'finishing' ? 'Finishing' : 'Uploading'}:{' '}
-                    {heroUpload.fileName}
-                  </span>
-                  <button type="button" className={styles.btnDanger} onClick={cancelUpload}>
-                    <BtnIcon src="/cross-mark2.svg" />
-                    Cancel
-                  </button>
-                </div>
-                <div className={styles.progressTrack}>
-                  <div className={styles.progressFill} style={{ width: `${heroUpload.progress}%` }} />
-                </div>
-                <div style={{ textAlign: 'right', marginTop: 6, color: '#666', fontSize: '0.85rem' }}>
-                  {heroUpload.progress}%
-                </div>
-              </div>
-            )}
-
-            {(heroUpload.status === 'done' || form.hero_section_media) &&
-              heroUpload.status !== 'uploading' &&
-              form.hero_section_media &&
-              heroMediaKind(form.hero_section_media) === heroTab && (
-              <div className={styles.uploadDone}>
-                {heroTab === 'video' ? (
-                  <video
-                    className={styles.previewMedia}
-                    controls
-                    playsInline
-                    key={heroPreview}
+            {heroTab === 'image' ? (
+              <>
+                {(heroImageUpload.status === 'idle' || heroImageUpload.status === 'error') &&
+                  !form.hero_section_media_image && (
+                  <div
+                    className={styles.uploadZone}
+                    onClick={() => canManage && heroImageInputRef.current?.click()}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') heroImageInputRef.current?.click();
+                    }}
                   >
-                    {/* Always include a video/mp4 source so .mov files play in Chrome/Firefox */}
-                    <source src={heroPreview} type="video/mp4" />
-                    <source src={heroPreview} />
-                  </video>
-                ) : (
-                  <HeroDevicePreviews
-                    src={heroPreview}
-                    x={form.hero_mobile_position?.x}
-                    y={form.hero_mobile_position?.y}
-                    disabled={!canManage}
-                    onChange={(nx, ny) =>
-                      updateField('hero_mobile_position', { x: nx, y: ny })
-                    }
-                  />
+                    <div style={{ fontSize: '2rem', color: '#9aabb8' }}>+</div>
+                    <div className={styles.uploadZoneTitle}>Click to select a hero image</div>
+                    <div className={styles.uploadZoneHint}>JPEG, PNG, GIF, WEBP · Max 20 MB</div>
+                  </div>
                 )}
-                <div className={styles.actionsRow}>
-                  <button
-                    type="button"
-                    className={styles.btnSecondary}
-                    disabled={!canManage}
-                    onClick={() => heroInputRef.current?.click()}
-                  >
-                    <BtnIcon src="/refresh.svg" />
-                    Replace
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.btnDanger}
-                    disabled={!canManage}
-                    onClick={clearHero}
-                  >
-                    <BtnIcon src="/trash2.svg" />
-                    Remove
-                  </button>
-                </div>
-              </div>
-            )}
 
-            {heroUpload.status === 'error' && heroUpload.error ? (
-              <p className={styles.fieldErrorText}>{heroUpload.error}</p>
-            ) : null}
-            {hasFieldError('hero_section_media') && !form.hero_section_media ? (
-              <p className={styles.fieldErrorText}>
-                {heroTab === 'video' ? 'Hero video is required' : 'Hero image is required'}
-              </p>
-            ) : null}
+                {heroImageUpload.status === 'uploading' && (
+                  <div className={styles.uploadProgress}>
+                    <div className={styles.progressMeta}>
+                      <span>
+                        {heroImageUpload.phase === 'finishing' ? 'Finishing' : 'Uploading'}:{' '}
+                        {heroImageUpload.fileName}
+                      </span>
+                      <button type="button" className={styles.btnDanger} onClick={cancelUpload}>
+                        <BtnIcon src="/cross-mark2.svg" />
+                        Cancel
+                      </button>
+                    </div>
+                    <div className={styles.progressTrack}>
+                      <div
+                        className={styles.progressFill}
+                        style={{ width: `${heroImageUpload.progress}%` }}
+                      />
+                    </div>
+                    <div style={{ textAlign: 'right', marginTop: 6, color: '#666', fontSize: '0.85rem' }}>
+                      {heroImageUpload.progress}%
+                    </div>
+                  </div>
+                )}
+
+                {(heroImageUpload.status === 'done' || form.hero_section_media_image) &&
+                  heroImageUpload.status !== 'uploading' &&
+                  form.hero_section_media_image && (
+                  <div className={styles.uploadDone}>
+                    <HeroDevicePreviews
+                      src={heroImagePreview}
+                      x={form.hero_mobile_position?.x}
+                      y={form.hero_mobile_position?.y}
+                      disabled={!canManage}
+                      onChange={(nx, ny) =>
+                        updateField('hero_mobile_position', { x: nx, y: ny })
+                      }
+                    />
+                    <div className={styles.actionsRow}>
+                      <button
+                        type="button"
+                        className={styles.btnSecondary}
+                        disabled={!canManage}
+                        onClick={() => heroImageInputRef.current?.click()}
+                      >
+                        <BtnIcon src="/refresh.svg" />
+                        Replace
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnDanger}
+                        disabled={!canManage}
+                        onClick={clearHeroImage}
+                      >
+                        <BtnIcon src="/trash2.svg" />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {heroImageUpload.status === 'error' && heroImageUpload.error ? (
+                  <p className={styles.fieldErrorText}>{heroImageUpload.error}</p>
+                ) : null}
+              </>
+            ) : (
+              <>
+                {(heroVideoUpload.status === 'idle' || heroVideoUpload.status === 'error') &&
+                  !form.hero_section_media_video && (
+                  <div
+                    className={styles.uploadZone}
+                    onClick={() => canManage && heroVideoInputRef.current?.click()}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') heroVideoInputRef.current?.click();
+                    }}
+                  >
+                    <div style={{ fontSize: '2rem', color: '#9aabb8' }}>+</div>
+                    <div className={styles.uploadZoneTitle}>Click to select a hero video</div>
+                    <div className={styles.uploadZoneHint}>MP4, WebM, OGG, MOV, AVI, MKV · Up to 4 GB</div>
+                  </div>
+                )}
+
+                {heroVideoUpload.status === 'uploading' && (
+                  <div className={styles.uploadProgress}>
+                    <div className={styles.progressMeta}>
+                      <span>
+                        {heroVideoUpload.phase === 'finishing' ? 'Finishing' : 'Uploading'}:{' '}
+                        {heroVideoUpload.fileName}
+                      </span>
+                      <button type="button" className={styles.btnDanger} onClick={cancelUpload}>
+                        <BtnIcon src="/cross-mark2.svg" />
+                        Cancel
+                      </button>
+                    </div>
+                    <div className={styles.progressTrack}>
+                      <div
+                        className={styles.progressFill}
+                        style={{ width: `${heroVideoUpload.progress}%` }}
+                      />
+                    </div>
+                    <div style={{ textAlign: 'right', marginTop: 6, color: '#666', fontSize: '0.85rem' }}>
+                      {heroVideoUpload.progress}%
+                    </div>
+                  </div>
+                )}
+
+                {(heroVideoUpload.status === 'done' || form.hero_section_media_video) &&
+                  heroVideoUpload.status !== 'uploading' &&
+                  form.hero_section_media_video && (
+                  <div className={styles.uploadDone}>
+                    <video className={styles.previewMedia} controls playsInline key={heroVideoPreview}>
+                      <source src={heroVideoPreview} type="video/mp4" />
+                      <source src={heroVideoPreview} />
+                    </video>
+                    <div className={styles.actionsRow}>
+                      <button
+                        type="button"
+                        className={styles.btnSecondary}
+                        disabled={!canManage}
+                        onClick={() => heroVideoInputRef.current?.click()}
+                      >
+                        <BtnIcon src="/refresh.svg" />
+                        Replace
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnDanger}
+                        disabled={!canManage}
+                        onClick={clearHeroVideo}
+                      >
+                        <BtnIcon src="/trash2.svg" />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {heroVideoUpload.status === 'error' && heroVideoUpload.error ? (
+                  <p className={styles.fieldErrorText}>{heroVideoUpload.error}</p>
+                ) : null}
+              </>
+            )}
           </div>
         </Section>
 
@@ -1232,12 +1378,8 @@ export default function PersonalInfoPage() {
               value={form.short_desc}
               onChange={(e) => updateField('short_desc', e.target.value)}
               placeholder="Write a short introduction…"
-              maxLength={SHORT_DESC_MAX}
               disabled={!canManage}
             />
-            <p className={styles.charCount}>
-              {String(form.short_desc || '').length}/{SHORT_DESC_MAX}
-            </p>
           </div>
         </Section>
 
@@ -1268,12 +1410,9 @@ export default function PersonalInfoPage() {
           </div>
         </Section>
 
-        <Section title="About section">
-          <div className={styles.aboutSection}>
-            <div className={styles.field}>
-              <label>
-                About image <RequiredMark />
-              </label>
+        <Section title="About image">
+          <div className={styles.aboutImageSection}>
+            <div className={`${styles.field} ${styles.aboutImageField}`}>
               <input
                 ref={aboutInputRef}
                 type="file"
@@ -1339,6 +1478,46 @@ export default function PersonalInfoPage() {
                       />
                       <div className={styles.aboutDragHint}>Drag to reposition</div>
                     </div>
+                    <div className={`${styles.posRow} ${styles.aboutPosRow}`}>
+                      <div className={styles.field}>
+                        <label htmlFor="about-pos-x">X</label>
+                        <input
+                          id="about-pos-x"
+                          className={styles.input}
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={Math.round(aboutPos.x)}
+                          disabled={!canManage}
+                          onChange={(e) =>
+                            updateField('about_image_position', {
+                              x: clampPct(e.target.value, aboutPos.x),
+                              y: aboutPos.y,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className={styles.field}>
+                        <label htmlFor="about-pos-y">Y</label>
+                        <input
+                          id="about-pos-y"
+                          className={styles.input}
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={Math.round(aboutPos.y)}
+                          disabled={!canManage}
+                          onChange={(e) =>
+                            updateField('about_image_position', {
+                              x: aboutPos.x,
+                              y: clampPct(e.target.value, aboutPos.y),
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
                     <div className={`${styles.actionsRow} ${styles.aboutActionsRow}`}>
                       <button
                         type="button"
@@ -1369,25 +1548,25 @@ export default function PersonalInfoPage() {
                 <p className={styles.fieldErrorText}>About image is required</p>
               ) : null}
             </div>
-
-            <div className={styles.field}>
-              <label>
-                About text <RequiredMark />
-              </label>
-              <textarea
-                className={`${styles.textarea} ${styles.textareaLarge} ${styles.aboutTextarea} ${hasFieldError('about_text') ? styles.inputError : ''}`}
-                value={form.about_text}
-                onChange={(e) => updateField('about_text', e.target.value)}
-                placeholder="Tell your full story…"
-                maxLength={ABOUT_TEXT_MAX}
-                disabled={!canManage}
-              />
-              <p className={styles.charCount}>
-                {String(form.about_text || '').length}/{ABOUT_TEXT_MAX}
-              </p>
-            </div>
           </div>
+        </Section>
 
+        <Section title="About text">
+          <div className={`${styles.field} ${styles.aboutTextField}`}>
+            <label>
+              About text <RequiredMark />
+            </label>
+            <textarea
+              className={`${styles.textarea} ${styles.textareaLarge} ${styles.aboutTextarea} ${hasFieldError('about_text') ? styles.inputError : ''}`}
+              value={form.about_text}
+              onChange={(e) => updateField('about_text', e.target.value)}
+              placeholder="Tell your full story…"
+              disabled={!canManage}
+            />
+          </div>
+        </Section>
+
+        <Section title="About details">
           <Subsection
             title="JOURNEY"
             note="Add each chapter of your journey with a title and short description."
@@ -1609,16 +1788,15 @@ export default function PersonalInfoPage() {
                 if (e.target === e.currentTarget) setLinkDeleteIndex(null);
               }}
             >
-              <div className={linkStyles.confirmDialog} onClick={(e) => e.stopPropagation()}>
-                <h3 id="delete-personal-link-confirm-title" className={linkStyles.confirmTitle}>
+              <div className={linkStyles.confirmContent} onClick={(e) => e.stopPropagation()}>
+                <h3 id="delete-personal-link-confirm-title">
                   Delete link?
                 </h3>
-                <p className={linkStyles.confirmMessage}>
+                <p>
                   Are you sure you want to delete{' '}
-                  <strong>{form.links[linkDeleteIndex]?.name || 'this link'}</strong>? This action cannot
-                  be undone until you save.
+                  <strong>{form.links[linkDeleteIndex]?.name || 'this link'}</strong>?
                 </p>
-                <div className={linkStyles.confirmActions}>
+                <div className={linkStyles.confirmButtons}>
                   <button
                     type="button"
                     className={linkStyles.confirmDeleteBtn}
@@ -1657,7 +1835,7 @@ export default function PersonalInfoPage() {
               handleCancel();
               router.push('/dashboard');
             }}
-            disabled={saving || heroUpload.status === 'uploading' || aboutUpload.status === 'uploading'}
+            disabled={saving || heroImageUpload.status === 'uploading' || heroVideoUpload.status === 'uploading' || aboutUpload.status === 'uploading'}
           >
             Cancel
           </button>

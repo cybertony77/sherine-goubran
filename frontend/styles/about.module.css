@@ -62,16 +62,23 @@
 .heroInner {
   display: grid;
   grid-template-columns: minmax(0, 0.46fr) minmax(0, 0.54fr);
-  gap: clamp(36px, 4.5vw, 64px);
-  align-items: center;
+  grid-template-areas:
+    'title image'
+    'copy image';
+  column-gap: clamp(36px, 4.5vw, 64px);
+  row-gap: 18px;
+  align-items: start;
 }
 
-.heroCopy {
-  min-width: 0;
-  text-align: left;
+.heroInnerSolo {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'title'
+    'copy';
 }
 
 .heroTitle {
+  grid-area: title;
   margin: 0;
   color: #f7f4ee;
   font-size: clamp(3.2rem, 6vw, 4.5rem);
@@ -82,9 +89,29 @@
   overflow-wrap: anywhere;
 }
 
-.heroRoles,
+.heroCopy {
+  grid-area: copy;
+  min-width: 0;
+  text-align: left;
+}
+
+.aboutImageWrap {
+  grid-area: image;
+  position: relative;
+  width: 100%;
+  justify-self: stretch;
+  align-self: stretch;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 169, 106, 0.34);
+  box-shadow:
+    0 28px 56px rgba(0, 0, 0, 0.38),
+    0 0 48px rgba(201, 169, 106, 0.08);
+  background: #1a1a1c;
+}
+
 .typingWrap {
-  margin: 22px 0 0;
+  margin: 0;
   min-height: 2em;
   display: flex;
   align-items: center;
@@ -170,19 +197,6 @@
 
 .heroActions .btnGhost:hover img:not(.waIcon) {
   filter: brightness(0);
-}
-
-.aboutImageWrap {
-  position: relative;
-  width: 100%;
-  justify-self: stretch;
-  border-radius: 24px;
-  overflow: hidden;
-  border: 1px solid rgba(201, 169, 106, 0.34);
-  box-shadow:
-    0 28px 56px rgba(0, 0, 0, 0.38),
-    0 0 48px rgba(201, 169, 106, 0.08);
-  background: #1a1a1c;
 }
 
 .aboutImageWrap img {
@@ -643,7 +657,8 @@
 
   .heroInner {
     grid-template-columns: minmax(0, 0.48fr) minmax(0, 0.52fr);
-    gap: 24px;
+    column-gap: 24px;
+    row-gap: 14px;
   }
 
   .heroTitle {
@@ -682,19 +697,39 @@
 
   .heroInner {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'title'
+      'image'
+      'copy';
     gap: 24px;
+  }
+
+  .heroInnerSolo {
+    grid-template-areas:
+      'title'
+      'copy';
   }
 
   .heroCopy {
     text-align: center;
   }
 
-  .heroLead,
+  .heroTitle {
+    text-align: center;
+  }
+
   .heroRoles,
   .typingWrap {
+    margin-top: 0;
     margin-left: auto;
     margin-right: auto;
     justify-content: center;
+  }
+
+  .heroLead {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
   }
 
   .heroActions {

@@ -83,9 +83,8 @@ export default function ContactPage() {
           <p className={styles.eyebrow}>Contact</p>
           <h1 className={styles.title}>Let's Connect</h1>
           <p className={styles.lead}>
-            {firstName
-              ? `Send a message below, or contact ${firstName} directly on WhatsApp for bookings and quick inquiries.`
-              : 'Send a message below, or get in touch directly on WhatsApp for bookings and quick inquiries.'}
+            Have a question, booking inquiry or collaboration in mind? Get in touch and we&apos;ll
+            get back to you as soon as possible.
           </p>
         </div>
       </header>
@@ -105,15 +104,8 @@ export default function ContactPage() {
         {sent ? null : (
           <aside className={styles.infoCol} aria-label="Direct contact">
             <div className={styles.infoPanel}>
-              <h2 className={styles.infoTitle}>Let's Connect</h2>
+              <h2 className={styles.infoTitle}>Get in Touch</h2>
               <p className={styles.contactText}>{contactText || fallbackText}</p>
-              {waHref ? (
-                <p className={styles.waHint}>
-                  {firstName
-                    ? `Prefer to chat directly? For bookings and quick inquiries, contact ${firstName} on WhatsApp.`
-                    : 'Prefer to chat directly? For bookings and quick inquiries, get in touch on WhatsApp.'}
-                </p>
-              ) : null}
 
               {waHref ? (
                 <a
@@ -121,9 +113,9 @@ export default function ContactPage() {
                   href={waHref}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label={firstName ? `Chat with ${firstName} on WhatsApp` : 'Chat on WhatsApp'}
+                  aria-label="Chat on WhatsApp"
                 >
-                  <Image src="/whatsapp2.svg" alt="" width={22} height={22} />
+                  <Image src="/whatsapp2.svg" alt="" width={18} height={18} />
                   Chat on WhatsApp
                 </a>
               ) : null}

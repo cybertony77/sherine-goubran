@@ -12,12 +12,13 @@
 
 .formTitle {
   margin: 0;
-  color: #f7f4ee;
+  color: #c9a96a;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .formLead {

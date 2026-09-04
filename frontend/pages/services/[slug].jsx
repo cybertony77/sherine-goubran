@@ -8,7 +8,6 @@ import PublicContentLoader from '../../components/PublicContentLoader';
 import { usePersonalInfo } from '../../lib/api/personalInfo';
 import { usePublicService } from '../../lib/api/publicServices';
 import { selectServiceReviews, usePublicTestimonials } from '../../lib/api/publicTestimonials';
-import { firstNameFromFullName } from '../../lib/publicSite';
 import { formatPhoneForDB } from '../../lib/phoneUtils';
 import { contactHrefForService } from '../../lib/serviceSlug';
 import ButtonArrow from '../../components/ButtonArrow';
@@ -80,8 +79,6 @@ export default function PublicServiceDetailPage() {
   const { data: publicTestimonials = [], isLoading: reviewsLoading } = usePublicTestimonials();
 
   const fullName = String(personalInfo?.name || '').trim();
-  const firstName = firstNameFromFullName(fullName);
-  const contactLabel = firstName ? `Contact ${firstName}` : 'Get in touch';
   const contactHref = contactHrefForService(service?.slug);
   const waDigits = formatPhoneForDB(personalInfo?.contact_phone || '');
   const waHref = waDigits.length > 2
@@ -270,16 +267,14 @@ export default function PublicServiceDetailPage() {
 
       <section className={`${styles.section} ${styles.cta}`} aria-label="Take the next step">
         <div className={styles.ctaInner}>
-          <h2 className={styles.ctaTitle}>Ready to take the next step?</h2>
+          <h2 className={styles.ctaTitle}>Interested in this service?</h2>
           <p className={styles.ctaLead}>
-            {firstName
-              ? `Whether you're ready to begin or simply have a question, ${firstName} is here to help.`
-              : "Whether you're ready to begin or simply have a question, I'm here to help."}
+            Get in touch to learn more, ask a question or see if this service is right for you.
           </p>
           <div className={styles.ctaActions}>
-            <Link href={contactHref} className={`${styles.btnPrimary} ${styles.btnCta}`} aria-label={contactLabel}>
+            <Link href={contactHref} className={`${styles.btnPrimary} ${styles.btnCta}`} aria-label="Contact Us">
               <Image src="/phone.svg" alt="" width={18} height={18} />
-              {contactLabel}
+              Contact Us
             </Link>
             <Link href="/services" className={`${styles.btnGhost} ${styles.btnCta}`} aria-label="Explore more services">
               <Image src="/services.svg" alt="" width={18} height={18} />

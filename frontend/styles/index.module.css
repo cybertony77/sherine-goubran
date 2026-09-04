@@ -36,6 +36,43 @@
   display: block;
 }
 
+.mediaPoster,
+.mediaVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mediaPoster {
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 1.15s ease-in-out;
+  will-change: opacity;
+}
+
+.mediaPosterHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mediaVideo {
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 1.15s ease-in-out;
+  background: transparent;
+  will-change: opacity;
+}
+
+.mediaVideoReady {
+  opacity: 1;
+}
+
+.mediaVideoSolo.mediaVideoReady {
+  z-index: 2;
+  opacity: 1;
+}
+
 .mediaFallback {
   width: 100%;
   height: 100%;
@@ -399,6 +436,7 @@
   bottom: 0;
   height: 6.2rem;
   pointer-events: none;
+  border-radius: 5px;
   background: linear-gradient(180deg, rgba(15, 15, 16, 0) 0%, rgba(15, 15, 16, 0.72) 48%, #0f0f10 100%);
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
@@ -1236,21 +1274,33 @@
     gap: 28px;
   }
 
+  .aboutCopy {
+    display: contents;
+  }
+
+  .aboutKicker {
+    order: 1;
+    text-align: center;
+    width: 100%;
+  }
+
   .aboutImageWrap {
-    order: -1;
+    order: 2;
+  }
+
+  .aboutTextWrap {
+    order: 3;
+    max-height: 15.5em;
+  }
+
+  .readMore {
+    order: 4;
+    width: 100%;
   }
 
   .aboutImageWrap img {
     min-height: 280px;
     max-height: 420px;
-  }
-
-  .aboutTextWrap {
-    max-height: 15.5em;
-  }
-
-  .readMore {
-    width: 100%;
   }
 
   .certs {

@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePersonalInfo } from '../lib/api/personalInfo';
 import { formatPhoneForDB } from '../lib/phoneUtils';
-import { firstNameFromFullName } from '../lib/publicSite';
 import styles from '../styles/EventsCta.module.css';
 
 function askQuestionMessage(variant, eventName, eventType) {
@@ -15,8 +14,7 @@ function askQuestionMessage(variant, eventName, eventType) {
 
 export default function EventsCta({ variant = 'listing', eventName = '', eventType = '' }) {
   const { data: personalInfo } = usePersonalInfo();
-  const firstName = firstNameFromFullName(personalInfo?.name);
-  const contactLabel = firstName ? `Contact ${firstName}` : 'Get in touch';
+  const contactLabel = 'Contact Us';
 
   const isListing = variant === 'listing';
   const isUpcoming = variant === 'upcoming';
@@ -31,16 +29,10 @@ export default function EventsCta({ variant = 'listing', eventName = '', eventTy
   const title = 'Ready to take the next step?';
 
   const lead = isListing
-    ? firstName
-      ? `Whether you're looking to join a workshop, explore an event, or simply have a question, ${firstName} is here to help.`
-      : "Whether you're looking to join a workshop, explore an event, or simply have a question, I'm here to help."
+    ? 'Whether you\'re looking to join a workshop, explore an event, or simply have a question, we\'re here to help.'
     : isUpcoming
-      ? firstName
-        ? `Whether you're ready to join or simply have a question, ${firstName} is here to help.`
-        : "Whether you're ready to join or simply have a question, I'm here to help."
-      : firstName
-        ? `Interested in a future event or workshop? ${firstName} would love to hear from you.`
-        : "Interested in a future event or workshop? I'd love to hear from you.";
+      ? 'Whether you\'re ready to join or simply have a question, we\'re here to help.'
+      : 'Interested in a future event or workshop? We\'d love to hear from you.';
 
   return (
     <section className={styles.cta} aria-label="Take the next step">

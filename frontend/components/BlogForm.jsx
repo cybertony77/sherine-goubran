@@ -5,8 +5,6 @@ import { uploadToCloudinaryDirect } from '../lib/cloudinaryDirectUpload';
 import styles from '../styles/blogs.module.css';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-const SHORT_DESC_MAX = 300;
-const LONG_DESC_MAX = 1000;
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
 export function emptyBlogForm() {
@@ -306,17 +304,13 @@ export default function BlogForm({
           className={`${styles.textarea} ${styles.textareaShort}`}
           value={form.shortDescription}
           onChange={(e) => {
-            setForm((s) => ({ ...s, shortDescription: e.target.value.slice(0, SHORT_DESC_MAX) }));
+            setForm((s) => ({ ...s, shortDescription: e.target.value }));
             setFieldErrors((err) => ({ ...err, shortDescription: false }));
           }}
           placeholder="Brief summary of this blog"
           rows={3}
-          maxLength={SHORT_DESC_MAX}
           disabled={busy}
         />
-        <p className={styles.charCount}>
-          {String(form.shortDescription || '').length}/{SHORT_DESC_MAX}
-        </p>
       </div>
 
       <div
@@ -330,17 +324,13 @@ export default function BlogForm({
           className={`${styles.textarea} ${styles.textareaLarge}`}
           value={form.longDescription}
           onChange={(e) => {
-            setForm((s) => ({ ...s, longDescription: e.target.value.slice(0, LONG_DESC_MAX) }));
+            setForm((s) => ({ ...s, longDescription: e.target.value }));
             setFieldErrors((err) => ({ ...err, longDescription: false }));
           }}
           placeholder="Full blog content"
           rows={10}
-          maxLength={LONG_DESC_MAX}
           disabled={busy}
         />
-        <p className={styles.charCount}>
-          {String(form.longDescription || '').length}/{LONG_DESC_MAX}
-        </p>
       </div>
 
       <div
