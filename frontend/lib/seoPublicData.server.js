@@ -60,7 +60,7 @@ export async function fetchActivatedBlogSlugs() {
 export async function fetchActivatedEventSlugs() {
   return withDb(async (db) => {
     const events = await db
-      .collection('events_workshops')
+      .collection('events_and_workshops')
       .find({ visibilityState: 'Activated' })
       .project({ _id: 0, id: 1, name: 1, slug: 1 })
       .toArray();
@@ -112,7 +112,7 @@ export async function fetchPublicEventBySlug(slug) {
   if (!want) return null;
   return withDb(async (db) => {
     const activated = await db
-      .collection('events_workshops')
+      .collection('events_and_workshops')
       .find({ visibilityState: 'Activated' })
       .toArray();
     const withSlugs = withPublicEventSlugs(activated);
