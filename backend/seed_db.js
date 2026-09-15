@@ -108,6 +108,16 @@ async function seedDatabase() {
     console.log('✅ Cleared');
 
     // Create users (assistants/admin/developer)
+    // Prefer SEED_DEVELOPER_PASSWORD from env; never use a weak hardcoded password.
+    const seedPassword =
+      process.env.SEED_DEVELOPER_PASSWORD ||
+      envConfig.SEED_DEVELOPER_PASSWORD ||
+      '';
+    if (!seedPassword || seedPassword.length < 8) {
+      throw new Error(
+        'Set SEED_DEVELOPER_PASSWORD (min 8 chars) in env before seeding. Refusing weak default.'
+      );
+    }
     const assistants = [
       {
         id: 'tony',
@@ -115,14 +125,15 @@ async function seedDatabase() {
         phone: '201211172756',
         email: 'tony.joseph.business1717@gmail.com',
         role: 'developer',
-        password: await bcrypt.hash('tony', 10),
+        password: await bcrypt.hash(seedPassword, 10),
         account_state: 'Activated',
       },
     ];
 
     console.log('👥 Creating users...');
     await db.collection('users').insertMany(assistants);
-    console.log(`✅ Created ${assistants.length} users`);
+    console.log(`✅ Created ${assistants.length} users (developer id: tony)`);
+    console.log('⚠️  Password set from SEED_DEVELOPER_PASSWORD (not printed).');
 
     // Initialize subscription collection with default document
     console.log('🧾 Initializing subscription collection...');

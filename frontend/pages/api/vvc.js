@@ -104,7 +104,8 @@ export default async function handler(req, res) {
         const currentPage = parseInt(page) || 1;
         const pageSize = parseInt(limit) || 100;
         const searchTerm = search ? search.trim() : '';
-        const sortField = sortBy || 'date';
+        const ALLOWED_SORT = ['date', 'VVC', 'made_by_who', 'code_state', 'payment_state', 'code_lesson', 'viewed'];
+        const sortField = ALLOWED_SORT.includes(sortBy) ? sortBy : 'date';
         const sortDirection = sortOrder === 'desc' ? -1 : 1;
 
         // Build query filter for VVC collection
@@ -112,10 +113,11 @@ export default async function handler(req, res) {
 
         // Search: VVC code starts with OR made_by_who contains
         if (searchTerm.trim()) {
-          const search = searchTerm.trim();
+          const raw = searchTerm.trim();
+          const safeSearch = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           vvcQueryFilter.$or = [
-            { VVC: { $regex: `^${search}`, $options: 'i' } }, // VVC code starts with
-            { made_by_who: { $regex: search, $options: 'i' } } // made_by_who contains
+            { VVC: { $regex: `^${safeSearch}`, $options: 'i' } }, // VVC code starts with
+            { made_by_who: { $regex: safeSearch, $options: 'i' } } // made_by_who contains
           ];
         }
 

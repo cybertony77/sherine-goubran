@@ -1,4 +1,6 @@
 import { getCloudinary } from '../../../lib/cloudinaryConfig';
+import { authMiddleware, isAuthError } from '../../../lib/authMiddleware';
+import { applyCorsHeaders } from '../../../lib/corsAllowlist';
 
 const cloudinary = getCloudinary();
 
@@ -14,15 +16,9 @@ const ALLOWED_MIME_TYPES = [
 const FOLDER = 'public-testimonials';
 
 export default async function handler(req, res) {
-  const origin = req.headers.origin;
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+  if (!applyCorsHeaders(req, res)) {
+    return res.status(403).json({ error: 'Origin not allowed' });
   }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -33,6 +29,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    const user = await authMiddleware(req);
+    if (!['admin', 'developer', 'assistant'].includes(user.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     if (!req.body?.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
@@ -79,6 +80,9 @@ export default async function handler(req, res) {
       url: uploadResult.secure_url || uploadResult.url,
     });
   } catch (error) {
+    if (isAuthError(error)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     console.error('Cloudinary upload error (public-testimonial-image):', error?.message || error);
 
     if (error.http_code === 400) {
@@ -88,7 +92,7 @@ export default async function handler(req, res) {
         });
       }
       return res.status(400).json({
-        error: error.message || 'Invalid image file. Please try another picture.',
+        error: 'Invalid image file. Please try another picture.',
       });
     }
 
@@ -99,7 +103,7 @@ export default async function handler(req, res) {
     }
 
     return res.status(500).json({
-      error: error.message || 'Failed to upload image. Please try again.',
+      error: 'Failed to upload image. Please try again.',
     });
   }
 }

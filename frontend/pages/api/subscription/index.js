@@ -34,7 +34,7 @@ const envConfig = loadEnvConfig();
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/topphysics';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'mr-george-magdy';
 
-console.log('🔗 Using Mongo URI:', MONGO_URI);
+// console.log('🔗 Using Mongo URI:', MONGO_URI);
 
 async function requireDeveloper(req) {
   const user = await authMiddleware(req);

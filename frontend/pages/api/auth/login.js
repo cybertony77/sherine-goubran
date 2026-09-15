@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
 import UAParser from 'ua-parser-js';
+import { buildAuthCookie, getJwtSecret } from '../../../lib/authSecrets';
+import { checkRateLimit, clientKey } from '../../../lib/rateLimit';
 
 // Load environment variables from env.config
 function loadEnvConfig() {
@@ -33,7 +35,12 @@ function loadEnvConfig() {
 }
 
 const envConfig = loadEnvConfig();
-const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET || 'topphysics_secret';
+let JWT_SECRET;
+try {
+  JWT_SECRET = getJwtSecret();
+} catch {
+  JWT_SECRET = null;
+}
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/topphysics';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'mr-george-magdy';
 function isSubscriptionEnabled() {
@@ -95,12 +102,21 @@ function formatDateTime(date) {
   return `${day}/${month}/${year} at ${hour}:${minute} ${period}`;
 }
 
-console.log('🔗 Using Mongo URI:', MONGO_URI);
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  if (!JWT_SECRET) {
+    return res.status(500).json({ error: 'Server auth is misconfigured' });
+  }
+
+  const rl = checkRateLimit(clientKey(req, 'login'), { windowMs: 15 * 60 * 1000, max: 20 });
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(rl.retryAfterSec || 60));
+    return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
+  }
+
   const { assistant_id, password, device_id } = req.body;
   if (!assistant_id || !password) {
     return res.status(400).json({ error: 'assistant_id and password required' });
@@ -126,11 +142,11 @@ export default async function handler(req, res) {
     const assistant = await db.collection('users').findOne({ id: safeId });
     
     if (!assistant) {
-      return res.status(401).json({ error: 'user_not_found' });
+      return res.status(401).json({ error: 'invalid_credentials' });
     }
     const valid = await bcrypt.compare(password, assistant.password);
     if (!valid) {
-      return res.status(401).json({ error: 'wrong_password' });
+      return res.status(401).json({ error: 'invalid_credentials' });
     }
     
     // Check account_state based on role
@@ -325,12 +341,9 @@ export default async function handler(req, res) {
       JWT_SECRET,
       { expiresIn: '6h' }
     );
-    
-    // Set HTTP-only cookie with the token
-    res.setHeader('Set-Cookie', [
-      `token=${token}; HttpOnly; Secure=false; SameSite=Strict; Path=/; Max-Age=${6 * 60 * 60}` // 6 hours
-    ]);
-    
+
+    res.setHeader('Set-Cookie', [buildAuthCookie(token)]);
+
     res.json({ success: true, message: 'Login successful', role: assistant.role });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });

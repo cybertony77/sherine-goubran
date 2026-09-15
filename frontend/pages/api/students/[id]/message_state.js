@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 // Load environment variables from env.config
 function loadEnvConfig() {
   try {
@@ -67,6 +67,7 @@ export default async function handler(req, res) {
     
     // Verify authentication
     const user = await authMiddleware(req);
+    await requireStaff(user);
     console.log('Authenticated user:', user.assistant_id);
     
     // Get the current student data
@@ -148,6 +149,9 @@ export default async function handler(req, res) {
     
     res.json({ success: true });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     if (error.message.includes('Unauthorized') || error.message.includes('Invalid token')) {
       res.status(401).json({ error: error.message });
     } else {

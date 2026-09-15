@@ -22,6 +22,22 @@ import { isPublicSitePage, PUBLIC_SITE_ROUTES } from "../lib/publicSite";
 import { isPublicPortfolioPath } from "../lib/pageNames";
 import PageTransitionProvider from "../components/PageTransitionProvider";
 
+/** Only same-origin relative paths — blocks open redirects via redirectAfterLogin. */
+function isSafeRedirectPath(path) {
+  if (!path || typeof path !== 'string') return false;
+  let decoded = path;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    return false;
+  }
+  return (
+    decoded.startsWith('/') &&
+    !decoded.startsWith('//') &&
+    !decoded.includes('://')
+  );
+}
+
 const brandTheme = createTheme({
   primaryColor: 'brand',
   colors: {
@@ -1158,9 +1174,12 @@ function AppContent({ Component, pageProps, systemBackground }) {
       setShowRedirectToLogin(true);
       
       // Save the current path for redirect after login (except dashboards)
-      if (router.pathname !== "/dashboard" && router.pathname !== "/student_dashboard") {
-        // Store redirect path in a cookie or use router state
-        document.cookie = `redirectAfterLogin=${router.pathname}; path=/; max-age=300`; // 5 minutes
+      if (
+        router.pathname !== "/dashboard" &&
+        router.pathname !== "/student_dashboard" &&
+        isSafeRedirectPath(router.pathname)
+      ) {
+        document.cookie = `redirectAfterLogin=${encodeURIComponent(router.pathname)}; path=/; max-age=300`; // 5 minutes
       }
       
       // Redirect after showing preloader for 1 second

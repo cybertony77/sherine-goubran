@@ -18,6 +18,8 @@
 
 import crypto from 'crypto';
 import { getCloudinaryCredentials } from '../../../lib/cloudinaryConfig';
+import { authMiddleware, isAuthError } from '../../../lib/authMiddleware';
+import { applyCorsHeaders } from '../../../lib/corsAllowlist';
 
 // Map of folder -> allowed { resource_type, type } combo.
 const FOLDER_POLICY = {
@@ -48,17 +50,10 @@ function buildSignaturePayload(params) {
     .join('&');
 }
 
-export default function handler(req, res) {
-  // CORS so signed direct uploads work from any deployed origin / local IP.
-  const origin = req.headers.origin;
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+export default async function handler(req, res) {
+  if (!applyCorsHeaders(req, res)) {
+    return res.status(403).json({ error: 'Origin not allowed' });
   }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -69,10 +64,20 @@ export default function handler(req, res) {
   }
 
   try {
+    const user = await authMiddleware(req);
+    if (!['admin', 'developer', 'assistant', 'student'].includes(user.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const { folder } = req.body || {};
     const policy = FOLDER_POLICY[folder];
     if (!policy) {
       return res.status(400).json({ error: 'Invalid upload folder.' });
+    }
+
+    // Students may only upload profile pictures
+    if (user.role === 'student' && folder !== 'profile-pictures') {
+      return res.status(403).json({ error: 'Forbidden' });
     }
 
     const { cloud_name, api_key, api_secret } = getCloudinaryCredentials();
@@ -121,6 +126,9 @@ export default function handler(req, res) {
             : 100 * 1024 * 1024,
     });
   } catch (error) {
+    if (isAuthError(error)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     console.error('Cloudinary sign error:', error?.message || error);
     return res.status(500).json({ error: 'Failed to generate upload signature.' });
   }

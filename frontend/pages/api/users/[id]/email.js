@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from "../../../../lib/authMiddleware";
-import { verifySignature } from '../../../../lib/hmac';
+import { verifySignature } from '../../../../lib/hmacServer';
 
 // Load environment variables from env.config
 function loadEnvConfig() {

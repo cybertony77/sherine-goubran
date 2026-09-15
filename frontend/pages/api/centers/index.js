@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../lib/requireStaff';
 function loadEnvConfig() {
   try {
     const envPath = path.join(process.cwd(), '..', 'env.config');
@@ -86,7 +86,11 @@ export default async function handler(req, res) {
     // Authenticate user
     console.log('🔐 Authenticating user...');
     const user = await authMiddleware(req);
-    console.log('✅ User authenticated:', user.id);
+    // Students need centers for schedule; only staff can create/edit
+    if (req.method !== 'GET') {
+      await requireStaff(user);
+    }
+    console.log('✅ User authenticated:', user.assistant_id || user.id);
 
     if (req.method === 'GET') {
       // Get all centers
@@ -130,6 +134,9 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('Centers API error:', error);
     
     if (error.name === 'JsonWebTokenError') {

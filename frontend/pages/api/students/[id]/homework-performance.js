@@ -2,7 +2,8 @@ import { MongoClient, ObjectId } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
-import { verifySignature } from '../../../../lib/hmac';
+import {requireStaffOrSelfStudent, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
+import { verifySignature } from '../../../../lib/hmacServer';
 import { itemCenterMatchesStudentMainCenter } from '../../../../lib/studentCenterMatch';
 
 function loadEnvConfig() {
@@ -63,19 +64,8 @@ export default async function handler(req, res) {
 
     // If not public access, verify authentication
     if (!isPublicAccess) {
-      // Verify authentication - allow students to view their own results, or admins/assistants/developers to view any student
       const user = await authMiddleware(req);
-      const userId = user.assistant_id || user.id; // JWT contains assistant_id for students
-      
-      // Students can only view their own results
-      if (user.role === 'student' && userId !== student_id) {
-        return res.status(403).json({ error: 'Forbidden: You can only view your own results' });
-      }
-      
-      // Admins, assistants, and developers can view any student's results
-      if (!['student', 'admin', 'assistant', 'developer'].includes(user.role)) {
-        return res.status(403).json({ error: 'Forbidden: Access denied' });
-      }
+      await requireStaffOrSelfStudent(user, student_id);
     }
 
     // Get student data
@@ -261,6 +251,9 @@ export default async function handler(req, res) {
       chartData: chartData
     });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Error fetching homework performance:', error);
     res.status(500).json({ 
       error: 'Internal server error', 

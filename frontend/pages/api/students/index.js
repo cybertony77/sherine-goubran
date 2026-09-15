@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../lib/requireStaff';
 // Load environment variables from env.config
 function loadEnvConfig() {
   try {
@@ -43,7 +43,7 @@ function loadEnvConfig() {
 }
 
 const envConfig = loadEnvConfig();
-const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET || 'demo_secret';
+const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET;
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/demo-attendance-system';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'demo-attendance-system';
 const SYSTEM_SCORING_SYSTEM = envConfig.SYSTEM_SCORING_SYSTEM === 'true' || process.env.SYSTEM_SCORING_SYSTEM === 'true';
@@ -51,6 +51,26 @@ const WITH_PHISICAL_CARD = envConfig.WITH_PHISICAL_CARD === 'true';
 
 console.log('🔗 Final MONGO_URI being used:', MONGO_URI.replace(/:[^:@]*@/, ':****@'));
 console.log('🔗 Final DB_NAME being used:', DB_NAME);
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function exactMatchRegex(value) {
+  return new RegExp(`^${escapeRegExp(value)}$`, 'i');
+}
+
+const ALLOWED_STUDENT_SORT = [
+  'id',
+  'name',
+  'grade',
+  'course',
+  'main_center',
+  'courseType',
+  'gender',
+  'school',
+  'phone',
+];
 
 // Auth middleware is now imported from shared utility
 
@@ -147,6 +167,7 @@ export default async function handler(req, res) {
     // Verify authentication
     console.log('🔐 Authenticating user...');
     const user = await authMiddleware(req);
+    await requireStaff(user);
     console.log('✅ User authenticated:', user.assistant_id || user.id);
     
     if (req.method === 'GET') {
@@ -167,7 +188,7 @@ export default async function handler(req, res) {
         const centerFilter = center ? center.trim() : '';
         const courseTypeFilter = courseType ? courseType.trim() : '';
         const genderFilter = req.query.gender ? req.query.gender.trim() : '';
-        const sortField = sortBy || 'id';
+        const sortField = ALLOWED_STUDENT_SORT.includes(sortBy) ? sortBy : 'id';
         const sortDirection = sortOrder === 'desc' ? -1 : 1;
         
         console.log('📋 Pagination params:', { currentPage, pageSize, searchTerm, gradeFilter, courseFilter, centerFilter, courseTypeFilter, genderFilter, sortField, sortDirection });
@@ -189,7 +210,7 @@ export default async function handler(req, res) {
               }
             } else {
               // More than 4 digits = phone number search (student or parent)
-              const phoneRegex = new RegExp(search, 'i');
+              const phoneRegex = new RegExp(escapeRegExp(search), 'i');
               queryFilter.$or = [
                 { phone: phoneRegex },
                 { parentsPhone: phoneRegex }
@@ -197,7 +218,7 @@ export default async function handler(req, res) {
             }
           } else {
             // Non-numeric search = text search in name and school
-            const searchRegex = new RegExp(search, 'i');
+            const searchRegex = new RegExp(escapeRegExp(search), 'i');
           queryFilter.$or = [
               { name: searchRegex },
               { school: searchRegex }
@@ -206,23 +227,23 @@ export default async function handler(req, res) {
         }
         
         if (gradeFilter) {
-          queryFilter.grade = { $regex: new RegExp(`^${gradeFilter}$`, 'i') };
+          queryFilter.grade = { $regex: exactMatchRegex(gradeFilter) };
         }
         
         if (courseFilter) {
-          queryFilter.course = { $regex: new RegExp(`^${courseFilter}$`, 'i') };
+          queryFilter.course = { $regex: exactMatchRegex(courseFilter) };
         }
         
         if (centerFilter) {
-          queryFilter.main_center = { $regex: new RegExp(`^${centerFilter}$`, 'i') };
+          queryFilter.main_center = { $regex: exactMatchRegex(centerFilter) };
         }
         
         if (courseTypeFilter) {
-          queryFilter.courseType = { $regex: new RegExp(`^${courseTypeFilter}$`, 'i') };
+          queryFilter.courseType = { $regex: exactMatchRegex(courseTypeFilter) };
         }
         
         if (genderFilter) {
-          queryFilter.gender = { $regex: new RegExp(`^${genderFilter}$`, 'i') };
+          queryFilter.gender = { $regex: exactMatchRegex(genderFilter) };
         }
         
         console.log('🔍 Query filter:', JSON.stringify(queryFilter, null, 2));
@@ -633,6 +654,9 @@ export default async function handler(req, res) {
       res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Students API error:', error);
     
     if (error.message.includes('Unauthorized') || error.message.includes('Invalid token')) {

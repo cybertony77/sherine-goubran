@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../lib/requireStaff';
 function loadEnvConfig() {
   try {
     const envPath = path.join(process.cwd(), '..', 'env.config');
@@ -57,6 +57,7 @@ export default async function handler(req, res) {
 
     // Authenticate user
     const user = await authMiddleware(req);
+    await requireStaff(user);
 
     if (req.method === 'PUT') {
       // Update center
@@ -133,6 +134,9 @@ export default async function handler(req, res) {
     }
 
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('Center API error:', error);
     
     if (error.name === 'JsonWebTokenError') {

@@ -6,6 +6,22 @@ import { FloatingLabelInput } from '../components/FloatingLabelInput';
 import { useLogin } from '../lib/api/auth';
 import NeedHelp from '../components/NeedHelp';
 
+/** Only same-origin relative paths — blocks open redirects. */
+function isSafeRedirectPath(path) {
+  if (!path || typeof path !== 'string') return false;
+  let decoded = path;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    return false;
+  }
+  return (
+    decoded.startsWith('/') &&
+    !decoded.startsWith('//') &&
+    !decoded.includes('://')
+  );
+}
+
 export default function Login() {
   const [assistant_id, setAssistantId] = useState("");
   const [password, setPassword] = useState("");
@@ -133,15 +149,10 @@ export default function Login() {
   }, [otpError]);
 
   useEffect(() => {
-    // Load username and password from sessionStorage
+    // Load username from sessionStorage (never store passwords)
     const storedId = sessionStorage.getItem('student_id');
-    const storedPassword = sessionStorage.getItem('student_password');
-    
     if (storedId) {
       setAssistantId(storedId);
-    }
-    if (storedPassword) {
-      setPassword(storedPassword);
     }
 
     // Check if user is already authenticated by making a request to the server
@@ -172,23 +183,19 @@ export default function Login() {
     // Check authentication status
     checkAuthStatus();
 
-    // Load username and password from sessionStorage (from forgot password page)
+    // Prefill username only (from forgot password page) — password stays in React state
     if (typeof window !== 'undefined') {
       const savedUsername = sessionStorage.getItem('forgot_password_username');
-      const savedPassword = sessionStorage.getItem('forgot_password_password');
-      
       if (savedUsername) {
         setAssistantId(savedUsername);
-      }
-      if (savedPassword) {
-        setPassword(savedPassword);
       }
     }
 
     // Check if user was redirected from a protected page
     const cookies = document.cookie.split(';');
     const redirectCookie = cookies.find(cookie => cookie.trim().startsWith('redirectAfterLogin='));
-    const redirectPath = redirectCookie ? redirectCookie.split('=')[1] : null;
+    const rawRedirect = redirectCookie ? redirectCookie.split('=').slice(1).join('=') : null;
+    const redirectPath = isSafeRedirectPath(rawRedirect) ? decodeURIComponent(rawRedirect) : null;
     
     if (redirectPath && redirectPath !== "/" && redirectPath !== "/dashboard") {
       setRedirectMessage(`You must log in first to access: ${redirectPath}`);
@@ -570,39 +577,42 @@ export default function Login() {
             }
           }
           
-          // Remove all sessionStorage items after successful login
+          // Remove username sessionStorage items after successful login
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('student_id');
-            sessionStorage.removeItem('student_password');
             sessionStorage.removeItem('forgot_password_username');
-            sessionStorage.removeItem('forgot_password_password');
           }
           
-          // Check if there's a redirect path saved in cookies
+          // Check if there's a redirect path saved in cookies (relative paths only)
           const cookies = document.cookie.split(';');
           const redirectCookie = cookies.find(cookie => cookie.trim().startsWith('redirectAfterLogin='));
-          const redirectPath = redirectCookie ? redirectCookie.split('=')[1] : null;
-          console.log("🔍 Redirect path found:", redirectPath);
+          const rawRedirect = redirectCookie ? redirectCookie.split('=').slice(1).join('=') : null;
+          const redirectPath = isSafeRedirectPath(rawRedirect) ? decodeURIComponent(rawRedirect) : null;
           
           // Small delay to ensure token is stored and auth state updates
           setTimeout(() => {
-            if (redirectPath && redirectPath !== "/" && redirectPath !== "/login" && redirectPath !== "/dashboard") {
-              // Clear the redirect cookie and redirect to intended page
-              document.cookie = "redirectAfterLogin=; path=/; max-age=0";
-              console.log("🔄 Redirecting to:", redirectPath);
-              // Use window.location for more reliable redirect
+            document.cookie = "redirectAfterLogin=; path=/; max-age=0";
+            if (
+              redirectPath &&
+              redirectPath !== "/" &&
+              redirectPath !== "/login" &&
+              redirectPath !== "/dashboard"
+            ) {
               window.location.href = redirectPath;
             } else {
-              console.log("🔄 Redirecting to /dashboard");
               window.location.href = "/dashboard";
             }
           }, 100);
         },
         onError: (err) => {
-          if (err.response?.data?.error === 'user_not_found') {
+          if (err.response?.status === 429) {
+            setMessage(err.response?.data?.error || "Too many login attempts. Please try again later.");
+          } else if (
+            err.response?.data?.error === 'invalid_credentials' ||
+            err.response?.data?.error === 'user_not_found' ||
+            err.response?.data?.error === 'wrong_password'
+          ) {
             setMessage("Wrong username or password");
-          } else if (err.response?.data?.error === 'wrong_password') {
-            setPasswordError("Wrong password");
           } else if (err.response?.data?.error === 'account_deactivated') {
             setMessage("Access unavailable: This account is deactivated. Please contact Tony Joseph (developer).");
           } else if (err.response?.data?.error === 'student_account_deactivated') {
@@ -1283,17 +1293,7 @@ export default function Login() {
                 label="Password"
                 value={password}
                 onChange={e => {
-                  const value = e.target.value;
-                  setPassword(value);
-                  
-                  // Remove from sessionStorage if password field is cleared
-                  if (typeof window !== 'undefined') {
-                    if (value === '') {
-                      sessionStorage.removeItem('forgot_password_password');
-                    } else {
-                      sessionStorage.setItem('forgot_password_password', value);
-                    }
-                  }
+                  setPassword(e.target.value);
                 }}
                 error={passwordError || undefined}
                 autoComplete="current-password"

@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../lib/requireStaff';
 // Load environment variables from env.config
 function loadEnvConfig() {
   try {
@@ -94,9 +94,13 @@ export default async function handler(req, res) {
     let user;
     try {
       user = await authMiddleware(req);
+      await requireStaff(user);
       console.log('✅ Authentication successful for user:', user.assistant_id);
     } catch (authError) {
       console.log('❌ Authentication failed:', authError.message);
+      if (isForbiddenError(authError) || authError.message === 'Forbidden' || String(authError.message||'').includes('Forbidden')) {
+        return res.status(403).json(forbiddenJson(authError));
+      }
       return res.status(401).json({ 
         success: false,
         error: 'Authentication failed. Please log in again.',
@@ -177,6 +181,9 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Error saving payment:', error);
     
     if (error.message.includes('Unauthorized') || error.message.includes('Invalid token')) {

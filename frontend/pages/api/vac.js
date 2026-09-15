@@ -57,7 +57,8 @@ export default async function handler(req, res) {
       const currentPage = parseInt(page) || 1;
       const pageSize = parseInt(limit) || 100;
       const searchTerm = search ? search.trim() : '';
-      const sortField = sortBy || 'account_id';
+      const ALLOWED_SORT = ['account_id', 'VAC_activated', 'date'];
+      const sortField = ALLOWED_SORT.includes(sortBy) ? sortBy : 'account_id';
       const sortDirection = sortOrder === 'desc' ? -1 : 1;
 
       // Build query filter for VAC collection
@@ -76,7 +77,8 @@ export default async function handler(req, res) {
           }
         } else {
           // Non-numeric search = search by student name first, then get account_ids
-          const nameSearchRegex = new RegExp(search, 'i');
+          const safe = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const nameSearchRegex = new RegExp(safe, 'i');
           const studentsByName = await db.collection('students')
             .find({ name: nameSearchRegex })
             .project({ id: 1 })

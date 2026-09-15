@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../lib/authMiddleware';
 
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../lib/requireStaff';
 // Load environment variables from env.config
 function loadEnvConfig() {
   try {
@@ -94,9 +95,7 @@ export default async function handler(req, res) {
 
     // Authenticate user
     const user = await authMiddleware(req);
-    if (!user || !['admin', 'developer', 'assistant'].includes(user.role)) {
-      return res.status(403).json({ error: 'forbidden' });
-    }
+    await requireStaff(user);
 
     if (req.method === 'GET') {
       const { page, limit, search } = req.query;
@@ -119,12 +118,14 @@ export default async function handler(req, res) {
             }
           } else {
             // Search by student phone
-            const phoneRegex = new RegExp(searchTerm, 'i');
+            const safe = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const phoneRegex = new RegExp(safe, 'i');
             studentsFilter.phone = phoneRegex;
           }
         } else {
           // Search by student name
-          const nameRegex = new RegExp(searchTerm, 'i');
+          const safe = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const nameRegex = new RegExp(safe, 'i');
           studentsFilter.name = nameRegex;
         }
 
@@ -302,6 +303,10 @@ export default async function handler(req, res) {
 
     return res.status(405).json({ error: 'method_not_allowed' });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
+
     console.error('❌ Students devices API error:', error);
     return res.status(500).json({ error: 'internal_error', details: error.message });
   } finally {

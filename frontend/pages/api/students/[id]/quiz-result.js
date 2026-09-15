@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
 
+import {requireStaffOrSelfStudent, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 function loadEnvConfig() {
   try {
     const envPath = path.join(process.cwd(), '..', 'env.config');
@@ -68,12 +69,9 @@ export default async function handler(req, res) {
     client = await MongoClient.connect(MONGO_URI);
     const db = client.db(DB_NAME);
     
-    // Verify authentication - only student can save their own results
+    // Verify authentication — staff any student, or student self
     const user = await authMiddleware(req);
-    const userId = user.assistant_id || user.id; // JWT contains assistant_id for students
-    if (user.role !== 'student' || userId !== student_id) {
-      return res.status(403).json({ error: 'Forbidden: You can only save your own results' });
-    }
+    await requireStaffOrSelfStudent(user, student_id);
 
     // Check if student exists
     const student = await db.collection('students').findOne({ id: student_id });
@@ -225,6 +223,9 @@ export default async function handler(req, res) {
 
     res.json({ success: true, message: 'Quiz result saved successfully' });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Error saving quiz result:', error);
     res.status(500).json({ 
       error: 'Internal server error', 

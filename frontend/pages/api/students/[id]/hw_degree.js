@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 // Load environment variables from env.config
 function loadEnvConfig() {
   try {
@@ -31,11 +31,11 @@ function loadEnvConfig() {
 }
 
 const envConfig = loadEnvConfig();
-const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET || 'demo_secret';
+const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET;
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/demo-attendance-system';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'demo-attendance-system';
 
-console.log('🔗 Using Mongo URI:', MONGO_URI);
+// console.log('🔗 Using Mongo URI:', MONGO_URI);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -53,6 +53,7 @@ export default async function handler(req, res) {
     
     // Verify authentication
     const user = await authMiddleware(req);
+    await requireStaff(user);
     
     // Get the current student data
     const student = await db.collection('students').findOne({ id: student_id });
@@ -124,6 +125,9 @@ export default async function handler(req, res) {
     console.log('✅ Homework degree updated for student', student_id, 'lesson', lessonName, 'to', homework_degree);
     res.json({ success: true });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     if (error.message.includes('Unauthorized') || error.message.includes('Invalid token')) {
       res.status(401).json({ error: error.message });
     } else {

@@ -122,12 +122,14 @@ export default async function handler(req, res) {
             }
           } else {
             // Search by phone number
-            const phoneRegex = new RegExp(searchTerm, 'i');
+            const safe = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const phoneRegex = new RegExp(safe, 'i');
             usersFilter.phone = phoneRegex;
           }
         } else {
           // Search by username (id) or name
-          const nameRegex = new RegExp(searchTerm, 'i');
+          const safe = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const nameRegex = new RegExp(safe, 'i');
           usersFilter.$or = [
             { id: nameRegex },
             { name: nameRegex }

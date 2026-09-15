@@ -88,19 +88,25 @@ async function redirectToLoginOnUnauthorized() {
   window.location.assign('/login');
 }
 
-// Request interceptor for debugging
+const isDev = process.env.NODE_ENV === 'development';
+
+// Request interceptor for debugging (dev only — avoid logging bodies in production)
 apiClient.interceptors.request.use(
   (config) => {
-    console.log('🚀 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      withCredentials: config.withCredentials,
-    });
+    if (isDev) {
+      console.log('🚀 API Request:', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        baseURL: config.baseURL,
+        withCredentials: config.withCredentials,
+      });
+    }
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
+    if (isDev) {
+      console.error('❌ Request Error:', error);
+    }
     return Promise.reject(error);
   }
 );
@@ -108,11 +114,13 @@ apiClient.interceptors.request.use(
 // Response interceptor — handle expired/missing sessions without crashing the UI
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', {
-      status: response.status,
-      url: response.config.url,
-      data: response.data,
-    });
+    if (isDev) {
+      console.log('✅ API Response:', {
+        status: response.status,
+        url: response.config.url,
+        data: response.data,
+      });
+    }
     return response;
   },
   (error) => {
@@ -142,12 +150,14 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    console.error('❌ API Error:', {
-      status,
-      url,
-      message: error.message,
-      data: error.response?.data,
-    });
+    if (isDev) {
+      console.error('❌ API Error:', {
+        status,
+        url,
+        message: error.message,
+        data: error.response?.data,
+      });
+    }
     return Promise.reject(error);
   }
 );

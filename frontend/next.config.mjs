@@ -90,17 +90,24 @@ const nextConfig = {
   },
   async headers() {
     return [
-      // Global headers
       {
         source: '/(.*)',
         headers: [
+          { key: 'Permissions-Policy', value: 'camera=(self)' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           {
-            key: 'Permissions-Policy',
-            value: 'camera=(self)', // allow camera for same-origin
+            key: 'Content-Security-Policy',
+            value:
+              "frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains',
           },
         ],
       },
-      //  Existing logo caching rule
       {
         source: '/logo.png',
         headers: [
@@ -110,7 +117,6 @@ const nextConfig = {
           },
         ],
       },
-      // Cache all SVG files for 1 year
       {
         source: '/:path*.svg',
         headers: [

@@ -139,17 +139,6 @@ export default function ForgotPassword() {
     setForm({ ...form, [e.target.name]: newValue });
     setError("");
     setResetFailed(false);
-    
-    // Save password to sessionStorage when user types
-    if (typeof window !== 'undefined') {
-      if (e.target.name === 'newPassword') {
-        if (newValue) {
-          sessionStorage.setItem('forgot_password_password', newValue);
-        } else {
-          sessionStorage.removeItem('forgot_password_password');
-        }
-      }
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -187,7 +176,6 @@ export default function ForgotPassword() {
       setIsSubmitting(false);
       setResetSuccess(true);
       setForm({ newPassword: "", confirmPassword: "" });
-      // Keep password in sessionStorage for login page
     } catch (err) {
       setError(err.response?.data?.error || "❌ Failed to reset password");
       setIsSubmitting(false);

@@ -2,7 +2,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 function loadEnvConfig() {
   try {
     const envPath = path.join(process.cwd(), '..', 'env.config');
@@ -52,7 +52,8 @@ export default async function handler(req, res) {
     const db = client.db(DB_NAME);
     
     // Verify authentication
-    await authMiddleware(req);
+    const user = await authMiddleware(req);
+    await requireStaff(user);
 
     // Get student data
     const student = await db.collection('students').findOne({ id: student_id });
@@ -129,6 +130,9 @@ export default async function handler(req, res) {
 
     res.json({ success: true, message: 'Mock exam reset successfully' });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Error resetting mock exam:', error);
     res.status(500).json({ 
       error: 'Internal server error', 

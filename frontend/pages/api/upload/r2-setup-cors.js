@@ -4,19 +4,21 @@ import {
   buildR2CorsAllowedOrigins,
   getR2Config,
 } from '../../../lib/r2Server';
+import { authMiddleware, isAuthError } from '../../../lib/authMiddleware';
+import { applyCorsHeaders, getAllowedCorsOrigins } from '../../../lib/corsAllowlist';
+import { requireAdmin, isForbiddenError, forbiddenJson } from '../../../lib/requireStaff';
 
 /**
  * Manual CORS apply (same rules as auto-apply in r2-signed-url).
  * POST /api/upload/r2-setup-cors — optional if presigned-url flow already ran.
+ * Developer or admin only.
  *
  * Optional env: R2_CORS_ORIGINS = comma-separated origins
  */
 export default async function handler(req, res) {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin === '*' ? '*' : origin);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (!applyCorsHeaders(req, res)) {
+    return res.status(403).json({ error: 'Origin not allowed' });
+  }
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -27,10 +29,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    const user = await authMiddleware(req);
+    await requireAdmin(user);
+
     const cfg = getR2Config();
     assertR2Config(cfg);
 
-    const allowedOrigins = buildR2CorsAllowedOrigins(cfg.envConfig || {}, req.headers.origin || '');
+    const requestOrigin = req.headers.origin || '';
+    const corsOrigin =
+      requestOrigin && getAllowedCorsOrigins().has(requestOrigin) ? requestOrigin : '';
+    const allowedOrigins = buildR2CorsAllowedOrigins(cfg.envConfig || {}, corsOrigin);
     globalThis.__r2CorsEnsured = false;
 
     const s3Client = new S3Client({
@@ -68,7 +76,13 @@ export default async function handler(req, res) {
       allowedOrigins,
     });
   } catch (error) {
+    if (isAuthError(error)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('R2 CORS setup error:', error);
-    res.status(500).json({ error: 'Failed to configure CORS', details: error.message });
+    res.status(500).json({ error: 'Failed to configure CORS' });
   }
 }

@@ -203,8 +203,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log('📧 Attempting to send OTP email to:', user.email);
-    console.log('🔑 Generated OTP code:', otpCode);
+    console.log('📧 Attempting to send OTP email to user');
     console.log('👤 User name:', userName);
     console.log('📧 Using email from:', EMAIL_USER);
 

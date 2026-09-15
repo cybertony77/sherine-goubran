@@ -1,4 +1,6 @@
 import { getCloudinary } from '../../../lib/cloudinaryConfig';
+import { authMiddleware, isAuthError } from '../../../lib/authMiddleware';
+import { applyCorsHeaders } from '../../../lib/corsAllowlist';
 
 const cloudinary = getCloudinary();
 
@@ -39,16 +41,9 @@ async function uploadPdfWithRetry(file, options) {
 }
 
 export default async function handler(req, res) {
-  // Allow browser preflight if this route is ever called cross-origin
-  const origin = req.headers.origin;
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+  if (!applyCorsHeaders(req, res)) {
+    return res.status(403).json({ error: 'Origin not allowed' });
   }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -59,6 +54,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    const user = await authMiddleware(req);
+    if (!['admin', 'developer', 'assistant'].includes(user.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     if (!req.body || !req.body.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
@@ -98,17 +98,20 @@ export default async function handler(req, res) {
       url: uploadResult.secure_url,
     });
   } catch (error) {
+    if (isAuthError(error)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     console.error('Cloudinary PDF upload error:', error?.message || error);
 
     if (error.http_code === 400) {
-      return res.status(400).json({ error: error.message || 'Invalid PDF file.' });
+      return res.status(400).json({ error: 'Invalid PDF file.' });
     }
 
     if (error.http_code === 401 || error.http_code === 403) {
       return res.status(500).json({ error: 'Cloudinary authentication error. Please contact support.' });
     }
 
-    return res.status(500).json({ error: error.message || 'Failed to upload PDF. Please try again.' });
+    return res.status(500).json({ error: 'Failed to upload PDF. Please try again.' });
   }
 }
 

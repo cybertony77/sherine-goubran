@@ -5,6 +5,7 @@ import path from 'path';
 import { getCookieValue } from '../../../lib/cookies';
 import { authMiddleware, isAuthError } from "../../../lib/authMiddleware";
 
+import {requireStaff, requireStaffOrSelfStudent, isForbiddenError, forbiddenJson} from '../../../lib/requireStaff';
 // Load environment variables from env.config
 function loadEnvConfig() {
   try {
@@ -33,11 +34,11 @@ function loadEnvConfig() {
 }
 
 const envConfig = loadEnvConfig();
-const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET || 'topphysics_secret';
+const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET;
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/topphysics';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'topphysics';
 
-console.log('🔗 Using Mongo URI:', MONGO_URI);
+// console.log('🔗 Using Mongo URI:', MONGO_URI);
 
 // Auth middleware is now imported from shared utility
 
@@ -51,6 +52,12 @@ export default async function handler(req, res) {
     
     // Verify authentication
     const user = await authMiddleware(req);
+    // GET: student may read own record; staff may read any. Mutations: staff only.
+    if (req.method === 'GET') {
+      await requireStaffOrSelfStudent(user, student_id);
+    } else {
+      await requireStaff(user);
+    }
     
     if (req.method === 'GET') {
       // Get student info
@@ -323,6 +330,9 @@ export default async function handler(req, res) {
       res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     if (isAuthError(error)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }

@@ -2,7 +2,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 function loadEnvConfig() {
   try {
     const envPath = path.join(process.cwd(), '..', 'env.config');
@@ -53,6 +53,7 @@ export default async function handler(req, res) {
     
     // Verify authentication
     const user = await authMiddleware(req);
+    await requireStaff(user);
     const userId = user.assistant_id || user.id; // JWT contains assistant_id for students
     if (user.role !== 'student' || userId !== student_id) {
       return res.status(403).json({ error: 'Forbidden' });
@@ -77,6 +78,9 @@ export default async function handler(req, res) {
       hasResult: hasResult
     });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Error checking mock exam:', error);
     res.status(500).json({ 
       error: 'Internal server error', 

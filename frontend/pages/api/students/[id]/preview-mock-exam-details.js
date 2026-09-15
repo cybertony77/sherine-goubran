@@ -2,6 +2,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
+import {requireStaffOrSelfStudent, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 import { itemCenterMatchesStudentMainCenter } from '../../../../lib/studentCenterMatch';
 
 function loadEnvConfig() {
@@ -52,7 +53,8 @@ export default async function handler(req, res) {
     client = await MongoClient.connect(MONGO_URI);
     const db = client.db(DB_NAME);
 
-    await authMiddleware(req);
+    const user = await authMiddleware(req);
+    await requireStaffOrSelfStudent(user, student_id);
 
     const student = await db.collection('students').findOne({ id: student_id });
     if (!student) {
@@ -84,6 +86,10 @@ export default async function handler(req, res) {
       result: matchingResult,
     });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
+
     console.error('❌ Error fetching mock exam preview details:', error);
     res.status(500).json({
       error: 'Internal server error',

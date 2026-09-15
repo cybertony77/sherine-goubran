@@ -61,7 +61,7 @@ const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'demo-attendance-sys
 // Log connection info for debugging (without exposing credentials)
 if (MONGO_URI) {
   const uriWithoutAuth = MONGO_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
-  console.log('🔗 Delete Account API - Using Mongo URI:', uriWithoutAuth);
+  // console.log('🔗 Delete Account API - Using Mongo URI:', uriWithoutAuth);
   console.log('🔗 Delete Account API - Using DB Name:', DB_NAME);
 }
 

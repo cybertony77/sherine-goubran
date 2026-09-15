@@ -12,7 +12,7 @@ const WhatsAppButton = ({ student, onMessageSent, onScoreUpdate }) => {
   const [message, setMessage] = useState('');
   const updateMessageStateMutation = useUpdateMessageState();
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = async () => {
     setMessage('');
 
     try {
@@ -146,16 +146,26 @@ We want to inform you that we are in:
   • Comment: ${lessonComment}`;
       }
 
-      // Generate public link with HMAC
-      const publicLink = generatePublicStudentLink(student.id.toString());
+      // Generate public link with server-signed HMAC (fallback: unsigned path)
+      let publicLink = null;
+      try {
+        publicLink = await generatePublicStudentLink(student.id.toString());
+      } catch (linkErr) {
+        console.error('Failed to generate signed public student link:', linkErr);
+        publicLink = `/dashboard/student_info?id=${encodeURIComponent(student.id)}`;
+      }
 
       const isPaymentSystemEnabled = systemConfig?.payment_system === true || systemConfig?.payment_system === 'true';
 
-      whatsappMessage += `
+      if (publicLink) {
+        whatsappMessage += `
 
 Please visit the following link to check ${firstName}'s grades and progress: ⬇️
 
-🖇️ ${publicLink}
+🖇️ ${publicLink}`;
+      }
+
+      whatsappMessage += `
 
 Note :-
   • ${firstName}'s ID: ${student.id}${isPaymentSystemEnabled ? `

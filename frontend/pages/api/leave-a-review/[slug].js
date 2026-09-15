@@ -1,6 +1,10 @@
 import { MongoClient } from 'mongodb';
 import { getMongoFromEnv } from '../../../lib/marketingPageMongo';
 import { formatEgyptDateTime, nowEgyptDate } from '../../../lib/egyptDateTime';
+import { checkRateLimit, clientKey } from '../../../lib/rateLimit';
+
+const MAX_NAME_LEN = 200;
+const MAX_TEXT_LEN = 2000;
 
 function normalizeRating(value) {
   const n = Number(value);
@@ -43,13 +47,27 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      const rl = checkRateLimit(clientKey(req, 'leave-review'), {
+        windowMs: 15 * 60 * 1000,
+        max: 5,
+      });
+      if (!rl.ok) {
+        res.setHeader('Retry-After', String(rl.retryAfterSec || 60));
+        return res.status(429).json({
+          error: 'Too many review submissions. Please try again later.',
+          retryAfterSec: rl.retryAfterSec,
+        });
+      }
+
       const page = await db.collection('public_testimonials').findOne({ slug });
       if (!page || page.visibilityState === 'Deactivated') {
         return res.status(404).json({ error: 'Review page not found' });
       }
 
-      const name = String(req.body?.name || '').trim();
-      const text = String(req.body?.text || req.body?.message || '').trim();
+      const name = String(req.body?.name || '').trim().slice(0, MAX_NAME_LEN);
+      const text = String(req.body?.text || req.body?.message || '')
+        .trim()
+        .slice(0, MAX_TEXT_LEN);
       const rating = normalizeRating(req.body?.rating);
 
       if (!name) {

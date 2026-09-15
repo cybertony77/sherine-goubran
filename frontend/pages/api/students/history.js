@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../lib/requireStaff';
 // Load environment variables from env.config
 function loadEnvConfig() {
   try {
@@ -31,11 +31,11 @@ function loadEnvConfig() {
 }
 
 const envConfig = loadEnvConfig();
-const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET || 'topphysics_secret';
+const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET;
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/topphysics';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'topphysics';
 
-console.log('🔗 Using Mongo URI:', MONGO_URI);
+// console.log('🔗 Using Mongo URI:', MONGO_URI);
 
 // Auth middleware is now imported from shared utility
 
@@ -66,6 +66,7 @@ export default async function handler(req, res) {
     // Verify authentication
     console.log('🔐 Authenticating user...');
     const user = await authMiddleware(req);
+    await requireStaff(user);
     console.log('✅ User authenticated:', user.assistant_id || user.id);
     
     // Optimized approach: Get history records and join with students
@@ -188,6 +189,9 @@ export default async function handler(req, res) {
     res.json(result);
     
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ History API error:', error);
     
     if (error.message.includes('Unauthorized') || error.message.includes('Invalid token')) {

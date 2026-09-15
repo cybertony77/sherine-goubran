@@ -31,11 +31,11 @@ function loadEnvConfig() {
 }
 
 const envConfig = loadEnvConfig();
-const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET || 'topphysics_secret';
+const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET;
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/topphysics';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'topphysics';
 
-console.log('🔗 Using Mongo URI:', MONGO_URI);
+// console.log('🔗 Using Mongo URI:', MONGO_URI);
 
 /** Format like "02/13/2026, 7:26 AM" in Egypt (Africa/Cairo) time */
 function formatEgyptDateTime(date = new Date()) {

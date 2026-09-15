@@ -2,6 +2,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
+import {requireStaffOrSelfStudent, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 import { pickQuestionPictureFields } from '../../../../lib/questionPictures';
 
 function loadEnvConfig() {
@@ -52,12 +53,9 @@ export default async function handler(req, res) {
     client = await MongoClient.connect(MONGO_URI);
     const db = client.db(DB_NAME);
     
-    // Verify authentication - only student can view their own results
+    // Verify authentication — staff any student, or student self
     const user = await authMiddleware(req);
-    const userId = user.assistant_id || user.id; // JWT contains assistant_id for students
-    if (user.role !== 'student' || userId !== student_id) {
-      return res.status(403).json({ error: 'Forbidden: You can only view your own results' });
-    }
+    await requireStaffOrSelfStudent(user, student_id);
 
     // Get student data
     const student = await db.collection('students').findOne({ id: student_id });
@@ -116,6 +114,9 @@ export default async function handler(req, res) {
       showDetails
     });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Error fetching homework details:', error);
     res.status(500).json({ 
       error: 'Internal server error', 

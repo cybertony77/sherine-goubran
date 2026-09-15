@@ -1,5 +1,6 @@
 import { MongoClient } from 'mongodb';
-import { verifySignature } from '../../../../lib/hmac';
+import { verifySignature } from '../../../../lib/hmacServer';
+import { toPublicStudentPayload } from '../../../../lib/publicStudentPayload';
 import fs from 'fs';
 import path from 'path';
 
@@ -100,10 +101,8 @@ export default async function handler(req, res) {
       return res.status(404).json({ message: 'Student not found' });
     }
 
-    console.log('✅ Public API: Student found:', { id: student.id, name: student.name });
-    
     client.close();
-    return res.status(200).json(student);
+    return res.status(200).json(toPublicStudentPayload(student));
   } catch (error) {
     console.error('❌ Public API: Database error:', error);
     if (client) {

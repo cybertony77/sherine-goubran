@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
 
+import {requireStaffOrSelfStudent, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 function loadEnvConfig() {
   try {
     const envPath = path.join(process.cwd(), '..', 'env.config');
@@ -66,39 +67,11 @@ export default async function handler(req, res) {
 
   let client;
   try {
-    // Verify authentication - allow students
+    // Verify authentication — staff any student, or student self
     const user = await authMiddleware(req);
-    if (!['student', 'admin', 'developer', 'assistant'].includes(user.role)) {
-      return res.status(403).json({ error: 'Forbidden: Access denied' });
-    }
-
     const { id } = req.query;
     const student_id = parseInt(id);
-    // For students, the ID is in assistant_id, for others it's in id
-    // Handle both string and number types
-    const getUserId = (val) => {
-      if (val === null || val === undefined) return null;
-      return typeof val === 'number' ? val : parseInt(val);
-    };
-    
-    const userId = user.role === 'student' 
-      ? getUserId(user.assistant_id) || getUserId(user.id)
-      : getUserId(user.id) || getUserId(user.assistant_id);
-
-    // Students can only update their own data
-    if (user.role === 'student' && userId !== student_id) {
-      console.error('❌ Student ID mismatch:', { 
-        userId, 
-        student_id, 
-        assistant_id: user.assistant_id, 
-        user_id: user.id,
-        role: user.role 
-      });
-      return res.status(403).json({ 
-        error: 'Forbidden: You can only update your own data',
-        details: { userId, student_id, assistant_id: user.assistant_id, user_id: user.id }
-      });
-    }
+    await requireStaffOrSelfStudent(user, student_id);
 
     const { session_id, action, payment_state } = req.body; // action: 'view' or 'finish', payment_state: 'free' or 'paid'
 
@@ -319,6 +292,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid action. Use "view" or "finish"' });
     }
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Error in watch-video API:', error);
     return res.status(500).json({ 
       error: 'Internal server error', 

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
 
+import {requireStaffOrSelfStudent, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 function loadEnvConfig() {
   try {
     const envPath = path.join(process.cwd(), '..', 'env.config');
@@ -40,20 +41,11 @@ export default async function handler(req, res) {
 
   let client;
   try {
-    // Verify authentication - allow students
+    // Verify authentication — staff any student, or student self
     const user = await authMiddleware(req);
-    if (!['student', 'admin', 'developer', 'assistant'].includes(user.role)) {
-      return res.status(403).json({ error: 'Forbidden: Access denied' });
-    }
-
     const { id } = req.query;
     const student_id = parseInt(id);
-    const userId = parseInt(user.assistant_id || user.id);
-
-    // Students can only view their own data
-    if (user.role === 'student' && userId !== student_id) {
-      return res.status(403).json({ error: 'Forbidden: You can only view your own data' });
-    }
+    await requireStaffOrSelfStudent(user, student_id);
 
     client = await MongoClient.connect(MONGO_URI);
     const db = client.db(DB_NAME);
@@ -71,6 +63,9 @@ export default async function handler(req, res) {
       online_sessions: onlineSessions
     });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     console.error('❌ Error in online-sessions API:', error);
     return res.status(500).json({ 
       error: 'Internal server error', 

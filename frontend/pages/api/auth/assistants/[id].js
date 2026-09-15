@@ -2,7 +2,8 @@ import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
-import { authMiddleware } from '../../../../lib/authMiddleware';
+import { authMiddleware, isAuthError } from '../../../../lib/authMiddleware';
+import { isForbiddenError } from '../../../../lib/requireStaff';
 import { sendPasswordChangeEmail } from '../../lib/emailUtils';
 
 // Load environment variables from env.config
@@ -33,11 +34,8 @@ function loadEnvConfig() {
 }
 
 const envConfig = loadEnvConfig();
-const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET || 'topphysics_secret';
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/topphysics';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'topphysics';
-
-console.log('🔗 Using Mongo URI:', MONGO_URI);
 
 async function requireAdmin(req) {
   const user = await authMiddleware(req);
@@ -91,8 +89,16 @@ export default async function handler(req, res) {
           update.email = email.trim();
         }
       }
-      if (role !== undefined && role !== null && role.trim() !== '') {
-        update.role = role;
+      if (role !== undefined && role !== null && String(role).trim() !== '') {
+        const nextRole = String(role).trim();
+        if (nextRole === 'developer') {
+          if (admin.role !== 'developer') {
+            return res.status(403).json({ error: 'Forbidden' });
+          }
+        } else if (nextRole !== 'assistant' && nextRole !== 'admin') {
+          return res.status(400).json({ error: 'Invalid role. Allowed: assistant, admin' });
+        }
+        update.role = nextRole;
       }
       if (password !== undefined && password !== null && password.trim() !== '') {
         update.password = await bcrypt.hash(password, 10);
@@ -145,13 +151,14 @@ export default async function handler(req, res) {
       res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (error) {
-    if (error.message === 'Unauthorized') {
-      res.status(401).json({ error: 'Unauthorized' });
-    } else if (error.message === 'Forbidden: Admins only') {
-      res.status(403).json({ error: 'Forbidden: Admins only' });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
+    if (isAuthError(error)) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
+    if (isForbiddenError(error)) {
+      return res.status(403).json({ error: 'Forbidden: Admins or Developers only' });
+    }
+    console.error('assistants/[id] API error:', error?.message || error);
+    return res.status(500).json({ error: 'Internal server error' });
   } finally {
     if (client) await client.close();
   }

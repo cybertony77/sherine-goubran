@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../../../../lib/authMiddleware';
-
+import {requireStaff, isForbiddenError, forbiddenJson} from '../../../../lib/requireStaff';
 // Load environment variables from env.config
 function loadEnvConfig() {
   try {
@@ -29,7 +29,7 @@ function loadEnvConfig() {
 }
 
 const envConfig = loadEnvConfig();
-const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET || 'topphysics_secret';
+const JWT_SECRET = envConfig.JWT_SECRET || process.env.JWT_SECRET;
 const MONGO_URI = envConfig.MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/topphysics';
 const DB_NAME = envConfig.DB_NAME || process.env.DB_NAME || 'topphysics';
 
@@ -57,7 +57,8 @@ export default async function handler(req, res) {
     const db = client.db(DB_NAME);
 
     // Verify authentication
-    await authMiddleware(req);
+    const user = await authMiddleware(req);
+    await requireStaff(user);
 
     // Validate student
     const student = await db.collection('students').findOne({ id: studentId });
@@ -119,6 +120,9 @@ export default async function handler(req, res) {
 
     return res.json({ success: true });
   } catch (error) {
+    if (isForbiddenError(error)) {
+      return res.status(403).json(forbiddenJson(error));
+    }
     if (error.message.includes('Unauthorized') || error.message.includes('Invalid token')) {
       return res.status(401).json({ error: error.message });
     }
