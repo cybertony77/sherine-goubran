@@ -1029,25 +1029,30 @@
   gap: 10px;
   min-height: 52px;
   padding: 14px 18px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 14px;
-  background: linear-gradient(135deg, #1fa8dc 0%, #0ea5e9 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--system-secondary) 0%, #B8954F 48%, #C9A96A 78%, #feb954 145%);
+  color: #0F0F10;
   font-weight: 800;
   font-size: clamp(0.92rem, 3.6vw, 1.02rem);
+  letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(31, 168, 220, 0.32);
+  box-shadow:
+    0 10px 24px rgba(201, 169, 106, 0.38),
+    0 1px 0 rgba(255, 255, 255, 0.35) inset;
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
 .manageBtn img {
-  filter: brightness(0) invert(1);
+  filter: brightness(0);
 }
 
 .manageBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(31, 168, 220, 0.38);
-  filter: brightness(1.03);
+  filter: brightness(1.04);
+  box-shadow:
+    0 14px 30px rgba(201, 169, 106, 0.48),
+    0 1px 0 rgba(255, 255, 255, 0.4) inset;
 }
 
 .manageBtn:active {

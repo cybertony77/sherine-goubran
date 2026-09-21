@@ -5,6 +5,7 @@ import {
   buildPageTitle,
   getDefaultDescription,
   getSiteName,
+  getSiteOrigin,
   truncateMeta,
 } from '../lib/seo';
 
@@ -14,8 +15,14 @@ function asJsonLd(data) {
 }
 
 /**
- * Pages Router SEO head for public pages.
- * Title template: "Page Title | Website Name"
+ * Pages Router SEO head.
+ * Title template: "Page Title | SYSTEM_NAME"
+ *
+ * Meta tags use stable `key`s so they replace _document defaults
+ * (critical for crawler link previews).
+ *
+ * Pass siteName / origin from system config on the client when env vars
+ * are not available in the browser.
  */
 export default function SiteSeo({
   title,
@@ -25,14 +32,23 @@ export default function SiteSeo({
   type = 'website',
   keywords,
   noindex = false,
+  /** When true, omit canonical (e.g. private signed URLs) */
+  omitCanonical = false,
   jsonLd,
+  siteName: siteNameProp,
+  origin: originProp,
 }) {
-  const siteName = getSiteName();
+  const siteName = getSiteName(siteNameProp);
+  const origin = getSiteOrigin(originProp);
   const fullTitle = buildPageTitle(title, siteName);
-  const metaDescription = truncateMeta(description || getDefaultDescription());
-  const canonical = absoluteUrl(path);
-  const ogImage = absoluteMediaUrl(image || '/logo.png');
-  const robots = noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';
+  const metaDescription = truncateMeta(
+    description || getDefaultDescription(siteName)
+  );
+  const canonical = absoluteUrl(path, origin);
+  const ogImage = absoluteMediaUrl(image || '/logo.png', origin);
+  const robots = noindex
+    ? 'noindex, nofollow'
+    : 'index, follow, max-image-preview:large';
   const keywordContent = Array.isArray(keywords)
     ? keywords.filter(Boolean).join(', ')
     : String(keywords || '').trim();
@@ -41,25 +57,43 @@ export default function SiteSeo({
   return (
     <Head>
       <title>{fullTitle}</title>
-      <meta name="description" content={metaDescription} />
-      {keywordContent ? <meta name="keywords" content={keywordContent} /> : null}
-      <meta name="robots" content={robots} />
-      <meta name="googlebot" content={robots} />
-      <link rel="canonical" href={canonical} />
+      <meta key="description" name="description" content={metaDescription} />
+      {keywordContent ? (
+        <meta key="keywords" name="keywords" content={keywordContent} />
+      ) : null}
+      <meta key="robots" name="robots" content={robots} />
+      <meta key="googlebot" name="googlebot" content={robots} />
+      {!noindex && !omitCanonical ? (
+        <link key="canonical" rel="canonical" href={canonical} />
+      ) : null}
 
-      <meta property="og:site_name" content={siteName} />
-      <meta property="og:type" content={type} />
-      <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={metaDescription} />
-      <meta property="og:url" content={canonical} />
-      <meta property="og:locale" content="en_US" />
-      <meta property="og:image" content={ogImage} />
-      <meta property="og:image:alt" content={String(title || siteName)} />
+      <meta key="og:site_name" property="og:site_name" content={siteName} />
+      <meta key="og:type" property="og:type" content={type} />
+      <meta key="og:title" property="og:title" content={fullTitle} />
+      <meta
+        key="og:description"
+        property="og:description"
+        content={metaDescription}
+      />
+      {!noindex && !omitCanonical ? (
+        <meta key="og:url" property="og:url" content={canonical} />
+      ) : null}
+      <meta key="og:locale" property="og:locale" content="en_US" />
+      <meta key="og:image" property="og:image" content={ogImage} />
+      <meta
+        key="og:image:alt"
+        property="og:image:alt"
+        content={String(title || siteName)}
+      />
 
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={metaDescription} />
-      <meta name="twitter:image" content={ogImage} />
+      <meta key="twitter:card" name="twitter:card" content="summary_large_image" />
+      <meta key="twitter:title" name="twitter:title" content={fullTitle} />
+      <meta
+        key="twitter:description"
+        name="twitter:description"
+        content={metaDescription}
+      />
+      <meta key="twitter:image" name="twitter:image" content={ogImage} />
 
       {schemas.map((schema, index) => (
         <script

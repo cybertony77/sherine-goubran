@@ -10,6 +10,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BackToTop from "../components/BackToTop";
+import SiteSeo from "../components/SiteSeo";
 import { getApiBaseUrl } from "../config";
 import apiClient from "../lib/axios";
 import Image from "next/image";
@@ -21,6 +22,8 @@ import {
 import { isPublicSitePage, PUBLIC_SITE_ROUTES } from "../lib/publicSite";
 import { isPublicPortfolioPath } from "../lib/pageNames";
 import PageTransitionProvider from "../components/PageTransitionProvider";
+import { getPageSeo, isIndexablePath, normalizeSeoPath } from "../lib/seo";
+import { useSystemConfig } from "../lib/api/system";
 
 /** Only same-origin relative paths — blocks open redirects via redirectAfterLogin. */
 function isSafeRedirectPath(path) {
@@ -915,6 +918,30 @@ const isStudentDashboardRoute = (path) => {
   return path.startsWith('/student_dashboard');
 };
 
+/** Per-route title/description (+ default robots for private routes). */
+function DefaultPageSeo() {
+  const router = useRouter();
+  const { data: systemConfig } = useSystemConfig();
+  const lookupPath = normalizeSeoPath(router.pathname || '/');
+  const canonicalPath = normalizeSeoPath(
+    lookupPath === '/404' ? '/404' : router.asPath || lookupPath
+  );
+  const seo = getPageSeo(lookupPath, systemConfig?.name);
+  const indexable = isIndexablePath(canonicalPath);
+
+  return (
+    <SiteSeo
+      title={seo.title}
+      description={seo.description}
+      path={canonicalPath}
+      keywords={seo.keywords}
+      siteName={systemConfig?.name}
+      origin={systemConfig?.domain}
+      noindex={!indexable}
+    />
+  );
+}
+
 function AppContent({ Component, pageProps, systemBackground }) {
   const initialBg = systemBackground || DEFAULT_SYSTEM_BACKGROUND;
   const [pageBg, setPageBg] = useState(initialBg);
@@ -1552,22 +1579,42 @@ function AppContent({ Component, pageProps, systemBackground }) {
     (isSubscriptionEnabled && isAuthenticated && isLoadingSubscription && !publicPages.includes(router.pathname)) ||
     isRouteChanging
   ) {
-    return <Preloader background={pageBg} />;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <DefaultPageSeo />
+        <Preloader background={pageBg} />
+      </QueryClientProvider>
+    );
   }
 
   // Show redirect to login preloader if redirecting due to unauthorized access
   if (showRedirectToLogin) {
-    return <RedirectToLoginPreloader />;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <DefaultPageSeo />
+        <RedirectToLoginPreloader />
+      </QueryClientProvider>
+    );
   }
 
   // Show access denied preloader if redirecting due to admin access denied
   if (showAccessDenied) {
-    return <AccessDeniedPreloader />;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <DefaultPageSeo />
+        <AccessDeniedPreloader />
+      </QueryClientProvider>
+    );
   }
 
   // For unauthorized users on protected pages, show loading (will redirect)
   if (!isAuthenticated && !publicPages.includes(router.pathname)) {
-    return <Preloader background={pageBg} />;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <DefaultPageSeo />
+        <Preloader background={pageBg} />
+      </QueryClientProvider>
+    );
   }
 
   const isPublicSite = isPublicSitePage(router.pathname);
@@ -1577,6 +1624,7 @@ function AppContent({ Component, pageProps, systemBackground }) {
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <MantineProvider theme={brandTheme} forceColorScheme="light">
+            <DefaultPageSeo />
             <DevToolsProtection userRole={userRole} devtoolsBlockEnabled={devtoolsBlockEnabled} />
             <div
               className="page-container"
@@ -1606,6 +1654,7 @@ function AppContent({ Component, pageProps, systemBackground }) {
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <MantineProvider theme={brandTheme} forceColorScheme="light">
+            <DefaultPageSeo />
             <DevToolsProtection userRole={userRole} devtoolsBlockEnabled={devtoolsBlockEnabled} />
             {router.pathname === "/dashboard/student_info" ? (
               <div
@@ -1649,6 +1698,7 @@ function AppContent({ Component, pageProps, systemBackground }) {
       <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <MantineProvider theme={brandTheme} forceColorScheme="light">
+            <DefaultPageSeo />
             <DevToolsProtection userRole={userRole} devtoolsBlockEnabled={devtoolsBlockEnabled} />
             <Component {...pageProps} />
             <ReactQueryDevtools initialIsOpen={false} />
@@ -1661,13 +1711,14 @@ function AppContent({ Component, pageProps, systemBackground }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <MantineProvider theme={brandTheme} forceColorScheme="light">
-          <DevToolsProtection userRole={userRole} devtoolsBlockEnabled={devtoolsBlockEnabled} />
-          <div className="page-container" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            minHeight: '100vh' 
-          }}>
+          <MantineProvider theme={brandTheme} forceColorScheme="light">
+            <DefaultPageSeo />
+            <DevToolsProtection userRole={userRole} devtoolsBlockEnabled={devtoolsBlockEnabled} />
+            <div className="page-container" style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              minHeight: '100vh' 
+            }}>
             <Header />
             
             {/* Subscription Warning - Show for assistant/admin/developer, not on student_dashboard */}

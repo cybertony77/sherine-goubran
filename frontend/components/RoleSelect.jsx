@@ -39,7 +39,7 @@ export default function RoleSelect({
           alignItems: 'center',
           fontSize: '1rem',
           color: selectedRole ? 'var(--system-secondary)' : '#adb5bd',
-          backgroundColor: selectedRole ? '#f0f8ff' : '#ffffff',
+          backgroundColor: selectedRole ? 'rgba(201, 169, 106, 0.12)' : '#ffffff',
           fontWeight: selectedRole ? '600' : '400',
           transition: 'all 0.3s ease',
           boxShadow: actualIsOpen ? '0 0 0 3px rgba(201, 169, 106, 0.1)' : 'none'
@@ -92,7 +92,7 @@ export default function RoleSelect({
                 borderBottom: '1px solid #f8f9fa',
                 transition: 'background-color 0.2s ease',
                 color: selectedRole === role ? 'var(--system-secondary)' : '#000000',
-                backgroundColor: selectedRole === role ? '#f0f8ff' : '#ffffff',
+                backgroundColor: selectedRole === role ? 'rgba(201, 169, 106, 0.12)' : '#ffffff',
                 fontWeight: selectedRole === role ? '600' : '400'
               }}
               onClick={() => handleRoleSelect(role)}
